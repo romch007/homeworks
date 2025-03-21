@@ -1,14 +1,16 @@
+use aws_sdk_s3::presigning::PresigningConfig;
 use axum::{
     extract::{Path, State},
-    http::StatusCode,
     Json,
 };
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, time::Duration};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    errors::{InternalErrExt, NotFoundExt},
+    errors::{not_found, AppResult},
     models, AppState,
 };
 
@@ -18,6 +20,7 @@ pub fn router() -> OpenApiRouter<AppState> {
     OpenApiRouter::new()
         .routes(routes!(list_homeworks, create_homework))
         .routes(routes!(find_homework, update_homework, delete_homework))
+        .routes(routes!(prepare_upload))
 }
 
 /// Retrieves all the homeworks
@@ -31,18 +34,17 @@ pub fn router() -> OpenApiRouter<AppState> {
 )]
 async fn list_homeworks(
     State(state): State<AppState>,
-) -> Result<Json<Vec<models::HomeworkWithSubject>>, StatusCode> {
+) -> AppResult<Json<Vec<models::HomeworkWithSubject>>> {
     use crate::schema::homeworks::dsl::*;
     use crate::schema::subjects;
 
     let mut query = homeworks.left_join(subjects::table).into_boxed();
 
-    let mut conn = state.pool.get().await.map_internal_err()?;
+    let mut conn = state.pool.get().await?;
 
     let results = query
         .load::<(models::Homework, Option<models::Subject>)>(&mut conn)
-        .await
-        .map_internal_err()?;
+        .await?;
 
     let results = results
         .into_iter()
@@ -68,20 +70,17 @@ async fn list_homeworks(
 async fn find_homework(
     State(state): State<AppState>,
     Path(target_id): Path<u32>,
-) -> Result<Json<models::HomeworkWithSubject>, StatusCode> {
+) -> AppResult<Json<models::HomeworkWithSubject>> {
     use crate::schema::homeworks::dsl::*;
     use crate::schema::subjects;
 
-    let mut conn = state.pool.get().await.map_internal_err()?;
+    let mut conn = state.pool.get().await?;
 
     let (homework, subject) = homeworks
         .find(target_id as i32)
         .left_join(subjects::table)
         .first::<(models::Homework, Option<models::Subject>)>(&mut conn)
-        .await
-        .optional()
-        .map_internal_err()?
-        .map_not_found()?;
+        .await?;
 
     Ok(Json(models::HomeworkWithSubject { homework, subject }))
 }
@@ -98,17 +97,16 @@ async fn find_homework(
 async fn create_homework(
     State(state): State<AppState>,
     Json(payload): Json<models::NewHomework>,
-) -> Result<Json<models::Homework>, StatusCode> {
+) -> AppResult<Json<models::Homework>> {
     use crate::schema::homeworks;
 
-    let mut conn = state.pool.get().await.map_internal_err()?;
+    let mut conn = state.pool.get().await?;
 
     let new_homework = diesel::insert_into(homeworks::table)
         .values(&payload)
         .returning(models::Homework::as_returning())
         .get_result(&mut conn)
-        .await
-        .map_internal_err()?;
+        .await?;
 
     Ok(Json(new_homework))
 }
@@ -130,21 +128,18 @@ async fn update_homework(
     State(state): State<AppState>,
     Path(target_id): Path<u32>,
     Json(payload): Json<models::UpdatedHomework>,
-) -> Result<Json<models::Homework>, StatusCode> {
+) -> AppResult<Json<models::Homework>> {
     use crate::schema::homeworks;
     use crate::schema::homeworks::dsl::*;
 
-    let mut conn = state.pool.get().await.map_internal_err()?;
+    let mut conn = state.pool.get().await?;
 
     let updated_homework = diesel::update(homeworks::table)
         .filter(id.eq(target_id as i32))
         .set(&payload)
         .returning(models::Homework::as_returning())
         .get_result(&mut conn)
-        .await
-        .optional()
-        .map_internal_err()?
-        .map_not_found()?;
+        .await?;
 
     Ok(Json(updated_homework))
 }
@@ -165,19 +160,98 @@ async fn update_homework(
 async fn delete_homework(
     State(state): State<AppState>,
     Path(target_id): Path<u32>,
-) -> Result<(), StatusCode> {
+) -> AppResult<()> {
     use crate::schema::homeworks::dsl::*;
 
-    let mut conn = state.pool.get().await.map_internal_err()?;
+    let mut conn = state.pool.get().await?;
 
     let deleted_rows = diesel::delete(homeworks.filter(id.eq(target_id as i32)))
         .execute(&mut conn)
-        .await
-        .map_internal_err()?;
+        .await?;
 
     if deleted_rows == 0 {
-        return Err(StatusCode::NOT_FOUND);
+        return Err(not_found());
     }
 
     Ok(())
+}
+
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+struct PrepareUploadRequest {
+    pub filename: String,
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+struct PrepareUploadResponse {
+    pub file_id: u32,
+    pub upload_url: String,
+    pub upload_method: String,
+    pub upload_headers: HashMap<String, String>,
+}
+
+/// Prepares a file upload for the given homework
+#[utoipa::path(
+    delete,
+    path = "/{id}/prepare-upload",
+    tag = TAG,
+    responses(
+        (status = OK, body = PrepareUploadResponse),
+        (status = NOT_FOUND, description = "The homework does not exist")
+    ),
+    params(
+        ("id", description = "Id of the homework"),
+    )
+)]
+async fn prepare_upload(
+    State(state): State<AppState>,
+    Path(target_id): Path<u32>,
+    Json(payload): Json<PrepareUploadRequest>,
+) -> AppResult<Json<PrepareUploadResponse>> {
+    use crate::schema::files;
+    use crate::schema::homeworks::dsl::*;
+
+    let mut conn = state.pool.get().await?;
+
+    let homework = homeworks
+        .find(target_id as i32)
+        .first::<models::Homework>(&mut conn)
+        .await?;
+
+    let new_file = models::NewFile {
+        s3_key: format!("{}-{}", target_id, payload.filename),
+        name: payload.filename,
+        homework_id: homework.id,
+    };
+
+    let file = diesel::insert_into(files::table)
+        .values(&new_file)
+        .returning(models::File::as_returning())
+        .get_result(&mut conn)
+        .await?;
+
+    let presigned_config = PresigningConfig::expires_in(Duration::from_secs(60))?;
+
+    let presigned_req = state
+        .s3
+        .put_object()
+        .bucket(&state.config.s3_bucket)
+        .presigned(presigned_config)
+        .await?;
+
+    let upload_url = presigned_req.uri().to_string();
+    let upload_method = presigned_req.method().to_string();
+    let upload_headers = HashMap::from_iter(
+        presigned_req
+            .headers()
+            .map(|(k, v)| (k.to_string(), v.to_string())),
+    );
+
+    let resp = PrepareUploadResponse {
+        file_id: file.id as u32,
+        upload_url,
+        upload_method,
+        upload_headers,
+    };
+
+    Ok(Json(resp))
 }

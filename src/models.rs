@@ -59,3 +59,23 @@ pub struct HomeworkWithSubject {
 
     pub subject: Option<Subject>,
 }
+
+#[derive(Queryable, Selectable, Serialize, utoipa::ToSchema)]
+#[diesel(table_name = crate::schema::files)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct File {
+    pub id: i32,
+    pub name: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub s3_key: String,
+    pub homework_id: i32,
+}
+
+#[derive(Insertable, Deserialize, utoipa::ToSchema)]
+#[diesel(table_name = crate::schema::files)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct NewFile {
+    pub name: String,
+    pub s3_key: String,
+    pub homework_id: i32,
+}

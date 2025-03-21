@@ -1,11 +1,11 @@
 mod homeworks;
 mod subjects;
 
-use axum::{extract::State, http::StatusCode};
+use axum::extract::State;
 use diesel_async::RunQueryDsl;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
-use crate::{errors::InternalErrExt, AppState};
+use crate::{errors::AppResult, AppState};
 
 #[utoipa::path(
     get,
@@ -15,21 +15,17 @@ use crate::{errors::InternalErrExt, AppState};
         (status = OK, description = "App is healthy"),
     )
 )]
-async fn health(State(state): State<AppState>) -> Result<(), StatusCode> {
-    let mut conn = state.pool.get().await.map_internal_err()?;
+async fn health(State(state): State<AppState>) -> AppResult<()> {
+    let mut conn = state.pool.get().await?;
 
-    diesel::sql_query("SELECT 1")
-        .execute(&mut conn)
-        .await
-        .map_internal_err()?;
+    diesel::sql_query("SELECT 1").execute(&mut conn).await?;
 
     state
         .s3
         .head_bucket()
         .bucket(&state.config.s3_bucket)
         .send()
-        .await
-        .map_internal_err()?;
+        .await?;
 
     Ok(())
 }
