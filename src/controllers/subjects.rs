@@ -1,9 +1,10 @@
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     Json,
 };
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
+use serde::Deserialize;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
@@ -19,6 +20,11 @@ pub fn router() -> OpenApiRouter<AppState> {
         .routes(routes!(find_subject, update_subject, delete_subject))
 }
 
+#[derive(Debug, Deserialize, utoipa::IntoParams)]
+struct ListSubjectsParams {
+    search: Option<String>,
+}
+
 /// Retrieves all the subjects
 #[utoipa::path(
     get,
@@ -28,10 +34,19 @@ pub fn router() -> OpenApiRouter<AppState> {
         (status = OK, body = [models::Subject])
     )
 )]
-async fn list_subjects(State(state): State<AppState>) -> AppResult<Json<Vec<models::Subject>>> {
+async fn list_subjects(
+    State(state): State<AppState>,
+    Query(params): Query<ListSubjectsParams>,
+) -> AppResult<Json<Vec<models::Subject>>> {
     use crate::schema::subjects::dsl::*;
 
     let mut query = subjects.into_boxed();
+
+    if let Some(search) = params.search {
+        let q = format!("%{search}%");
+
+        query = query.filter(name.ilike(q));
+    }
 
     let mut conn = state.pool.get().await?;
 

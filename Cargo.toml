@@ -4,8 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-aws-config = { version = "1.5.16", features = ["behavior-version-latest"] }
-aws-sdk-s3 = { version = "1.74.0", features = ["behavior-version-latest"] }
 axum = "0.8.1"
 chrono = { version = "0.4.39", features = ["serde"] }
 diesel = { version = "2.2.7", features = ["chrono"] }

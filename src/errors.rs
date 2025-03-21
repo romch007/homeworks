@@ -65,18 +65,6 @@ impl From<DieselError> for BoxedAppError {
     }
 }
 
-impl From<aws_sdk_s3::presigning::PresigningConfigError> for BoxedAppError {
-    fn from(err: aws_sdk_s3::presigning::PresigningConfigError) -> Self {
-        Box::new(err)
-    }
-}
-
-impl<E: std::error::Error + Send + 'static> From<aws_sdk_s3::error::SdkError<E>> for BoxedAppError {
-    fn from(err: aws_sdk_s3::error::SdkError<E>) -> Self {
-        Box::new(err)
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct CustomApiError {
     status: StatusCode,

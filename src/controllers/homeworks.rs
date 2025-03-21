@@ -1,18 +1,14 @@
-use aws_sdk_s3::{presigning::PresigningConfig, types::ObjectCannedAcl};
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     Json,
 };
 use diesel::prelude::*;
-use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::Duration};
+use serde::Deserialize;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    errors::{not_found, AppResult, BoxedAppError},
+    errors::{not_found, AppResult},
     models, AppState,
 };
 
@@ -21,8 +17,13 @@ const TAG: &str = "Homeworks";
 pub fn router() -> OpenApiRouter<AppState> {
     OpenApiRouter::new()
         .routes(routes!(list_homeworks, create_homework))
-        .routes(routes!(find_homework, update_homework, delete_homework))
-        .routes(routes!(prepare_upload))
+        .routes(routes!(get_homework, update_homework, delete_homework))
+}
+
+#[derive(Debug, Deserialize, utoipa::IntoParams)]
+struct ListHomeworksParams {
+    /// Search query
+    search: Option<String>,
 }
 
 /// Retrieves all the homeworks
@@ -30,17 +31,27 @@ pub fn router() -> OpenApiRouter<AppState> {
     get,
     path = "/",
     tag = TAG,
+    params(
+        ListHomeworksParams
+    ),
     responses(
         (status = OK, body = [models::HomeworkWithSubject])
     )
 )]
 async fn list_homeworks(
     State(state): State<AppState>,
+    Query(params): Query<ListHomeworksParams>,
 ) -> AppResult<Json<Vec<models::HomeworkWithSubject>>> {
     use crate::schema::homeworks::dsl::*;
     use crate::schema::subjects;
 
     let mut query = homeworks.left_join(subjects::table).into_boxed();
+
+    if let Some(search) = params.search {
+        let q = format!("%{search}%");
+
+        query = query.filter(title.ilike(q.clone()).or(description.ilike(q)));
+    }
 
     let mut conn = state.pool.get().await?;
 
@@ -69,7 +80,7 @@ async fn list_homeworks(
         ("id", description = "Id of the homework"),
     )
 )]
-async fn find_homework(
+async fn get_homework(
     State(state): State<AppState>,
     Path(target_id): Path<u32>,
 ) -> AppResult<Json<models::HomeworkWithSubject>> {
@@ -176,104 +187,4 @@ async fn delete_homework(
     }
 
     Ok(())
-}
-
-#[derive(Debug, Deserialize, utoipa::ToSchema)]
-struct PrepareUploadRequest {
-    #[schema(examples("slides.pdf"))]
-    pub filename: String,
-}
-
-#[derive(Debug, Serialize, utoipa::ToSchema)]
-struct PrepareUploadResponse {
-    pub file_id: u32,
-
-    #[schema(
-        examples("https://s3.xx-xxx.scw.cloud/homeworks/slides.pdf?x-id=PutObject&X-Amz-Algorithm=xxx&X-Amz-Credential=xxxx&X-Amz-Date=xxxx&X-Amz-Expires=xx&X-Amz-SignedHeaders=xxxxx&X-Amz-Signature=xxxxx")
-    )]
-    pub upload_url: String,
-
-    #[schema(examples("PUT"))]
-    pub upload_method: String,
-
-    #[schema(example = json!({"x-amz-acl": "public-read"}))]
-    pub upload_headers: HashMap<String, String>,
-}
-
-/// Prepares a file upload for the given homework
-#[utoipa::path(
-    delete,
-    path = "/{id}/prepare-upload",
-    tag = TAG,
-    responses(
-        (status = OK, body = PrepareUploadResponse),
-        (status = NOT_FOUND, description = "The homework does not exist")
-    ),
-    params(
-        ("id", description = "Id of the homework"),
-    )
-)]
-async fn prepare_upload(
-    State(state): State<AppState>,
-    Path(target_id): Path<u32>,
-    Json(payload): Json<PrepareUploadRequest>,
-) -> AppResult<Json<PrepareUploadResponse>> {
-    use crate::schema::files;
-    use crate::schema::homeworks::dsl::*;
-
-    let mut conn = state.pool.get().await?;
-
-    let resp = conn
-        .transaction::<_, BoxedAppError, _>(|mut conn| {
-            {
-                async move {
-                    let homework = homeworks
-                        .find(target_id as i32)
-                        .first::<models::Homework>(&mut conn)
-                        .await?;
-
-                    let new_file = models::NewFile {
-                        s3_key: format!("{}-{}", target_id, payload.filename),
-                        name: payload.filename,
-                        homework_id: homework.id,
-                    };
-
-                    let file = diesel::insert_into(files::table)
-                        .values(&new_file)
-                        .returning(models::File::as_returning())
-                        .get_result(&mut conn)
-                        .await?;
-
-                    let presigned_config = PresigningConfig::expires_in(Duration::from_secs(60))?;
-
-                    let presigned_req = state
-                        .s3
-                        .put_object()
-                        .bucket(&state.config.s3_bucket)
-                        .key(&new_file.s3_key)
-                        .acl(ObjectCannedAcl::PublicRead)
-                        .presigned(presigned_config)
-                        .await?;
-
-                    let upload_url = presigned_req.uri().to_string();
-                    let upload_method = presigned_req.method().to_string();
-                    let upload_headers = HashMap::from_iter(
-                        presigned_req
-                            .headers()
-                            .map(|(k, v)| (k.to_string(), v.to_string())),
-                    );
-
-                    Ok(PrepareUploadResponse {
-                        file_id: file.id as u32,
-                        upload_url,
-                        upload_method,
-                        upload_headers,
-                    })
-                }
-            }
-            .scope_boxed()
-        })
-        .await?;
-
-    Ok(Json(resp))
 }

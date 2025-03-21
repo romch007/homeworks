@@ -20,13 +20,6 @@ async fn health(State(state): State<AppState>) -> AppResult<()> {
 
     diesel::sql_query("SELECT 1").execute(&mut conn).await?;
 
-    state
-        .s3
-        .head_bucket()
-        .bucket(&state.config.s3_bucket)
-        .send()
-        .await?;
-
     Ok(())
 }
 
