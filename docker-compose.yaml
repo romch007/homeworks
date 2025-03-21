@@ -1,0 +1,15 @@
+volumes:
+  pg_data:
+
+services:
+  database:
+    image: postgres:17
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: homeworks
+      POSTGRES_PASSWORD: test1234
+      POSTGRES_DB: homeworks
