@@ -1,16 +1,18 @@
-use aws_sdk_s3::presigning::PresigningConfig;
+use aws_sdk_s3::{presigning::PresigningConfig, types::ObjectCannedAcl};
 use axum::{
     extract::{Path, State},
     Json,
 };
 use diesel::prelude::*;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use diesel_async::AsyncConnection;
 use diesel_async::RunQueryDsl;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    errors::{not_found, AppResult},
+    errors::{not_found, AppResult, BoxedAppError},
     models, AppState,
 };
 
@@ -178,14 +180,23 @@ async fn delete_homework(
 
 #[derive(Debug, Deserialize, utoipa::ToSchema)]
 struct PrepareUploadRequest {
+    #[schema(examples("slides.pdf"))]
     pub filename: String,
 }
 
 #[derive(Debug, Serialize, utoipa::ToSchema)]
 struct PrepareUploadResponse {
     pub file_id: u32,
+
+    #[schema(
+        examples("https://s3.xx-xxx.scw.cloud/homeworks/slides.pdf?x-id=PutObject&X-Amz-Algorithm=xxx&X-Amz-Credential=xxxx&X-Amz-Date=xxxx&X-Amz-Expires=xx&X-Amz-SignedHeaders=xxxxx&X-Amz-Signature=xxxxx")
+    )]
     pub upload_url: String,
+
+    #[schema(examples("PUT"))]
     pub upload_method: String,
+
+    #[schema(example = json!({"x-amz-acl": "public-read"}))]
     pub upload_headers: HashMap<String, String>,
 }
 
@@ -212,46 +223,57 @@ async fn prepare_upload(
 
     let mut conn = state.pool.get().await?;
 
-    let homework = homeworks
-        .find(target_id as i32)
-        .first::<models::Homework>(&mut conn)
+    let resp = conn
+        .transaction::<_, BoxedAppError, _>(|mut conn| {
+            {
+                async move {
+                    let homework = homeworks
+                        .find(target_id as i32)
+                        .first::<models::Homework>(&mut conn)
+                        .await?;
+
+                    let new_file = models::NewFile {
+                        s3_key: format!("{}-{}", target_id, payload.filename),
+                        name: payload.filename,
+                        homework_id: homework.id,
+                    };
+
+                    let file = diesel::insert_into(files::table)
+                        .values(&new_file)
+                        .returning(models::File::as_returning())
+                        .get_result(&mut conn)
+                        .await?;
+
+                    let presigned_config = PresigningConfig::expires_in(Duration::from_secs(60))?;
+
+                    let presigned_req = state
+                        .s3
+                        .put_object()
+                        .bucket(&state.config.s3_bucket)
+                        .key(&new_file.s3_key)
+                        .acl(ObjectCannedAcl::PublicRead)
+                        .presigned(presigned_config)
+                        .await?;
+
+                    let upload_url = presigned_req.uri().to_string();
+                    let upload_method = presigned_req.method().to_string();
+                    let upload_headers = HashMap::from_iter(
+                        presigned_req
+                            .headers()
+                            .map(|(k, v)| (k.to_string(), v.to_string())),
+                    );
+
+                    Ok(PrepareUploadResponse {
+                        file_id: file.id as u32,
+                        upload_url,
+                        upload_method,
+                        upload_headers,
+                    })
+                }
+            }
+            .scope_boxed()
+        })
         .await?;
-
-    let new_file = models::NewFile {
-        s3_key: format!("{}-{}", target_id, payload.filename),
-        name: payload.filename,
-        homework_id: homework.id,
-    };
-
-    let file = diesel::insert_into(files::table)
-        .values(&new_file)
-        .returning(models::File::as_returning())
-        .get_result(&mut conn)
-        .await?;
-
-    let presigned_config = PresigningConfig::expires_in(Duration::from_secs(60))?;
-
-    let presigned_req = state
-        .s3
-        .put_object()
-        .bucket(&state.config.s3_bucket)
-        .presigned(presigned_config)
-        .await?;
-
-    let upload_url = presigned_req.uri().to_string();
-    let upload_method = presigned_req.method().to_string();
-    let upload_headers = HashMap::from_iter(
-        presigned_req
-            .headers()
-            .map(|(k, v)| (k.to_string(), v.to_string())),
-    );
-
-    let resp = PrepareUploadResponse {
-        file_id: file.id as u32,
-        upload_url,
-        upload_method,
-        upload_headers,
-    };
 
     Ok(Json(resp))
 }

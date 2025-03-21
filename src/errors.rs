@@ -37,7 +37,7 @@ pub type AppResult<T> = Result<T, BoxedAppError>;
 
 impl<E: std::error::Error + Send + 'static> AppError for E {
     fn response(&self) -> axum::response::Response {
-        tracing::error!("Internal Server Error");
+        tracing::error!("Internal Server Error: {}", self);
 
         server_error_response()
     }

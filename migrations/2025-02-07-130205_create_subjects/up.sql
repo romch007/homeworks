@@ -4,4 +4,4 @@ CREATE TABLE subjects (
 );
 
 ALTER TABLE homeworks
-ADD subject_id INTEGER REFERENCES subjects(id);
+ADD subject_id INTEGER REFERENCES subjects(id) ON DELETE SET NULL;
