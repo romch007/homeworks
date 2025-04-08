@@ -39,6 +39,21 @@
         <router-view />
       </v-container>
     </v-main>
+
+    <v-footer
+      app
+      v-if="!$vuetify.display.mobile"
+      class="d-flex align-center justify-center ga-2 flex-wrap flex-grow-1 py-3"
+    >
+      © 2025 Romain Chardiny —
+      <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank"
+        >AGPLv3 License</a
+      >
+      —
+      <a href="https://github.com/romch007/homeworks" target="_blank"
+        >View Source</a
+      >
+    </v-footer>
   </v-app>
 </template>
 
