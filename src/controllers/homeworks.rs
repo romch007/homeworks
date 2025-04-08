@@ -51,15 +51,30 @@ async fn list_homeworks(
     State(state): State<AppState>,
     Query(params): Query<ListHomeworksParams>,
 ) -> AppResult<Json<Vec<models::HomeworkWithSubject>>> {
+    use crate::schema::homeworks::dsl::textsearchable_index_col;
     use crate::schema::homeworks::dsl::*;
     use crate::schema::subjects;
+    use diesel_full_text_search::*;
 
-    let mut query = homeworks.left_join(subjects::table).into_boxed();
+    let mut query = homeworks
+        .left_join(subjects::table)
+        .select((
+            models::HOMEWORK_ALL_COLUMNS,
+            Option::<models::Subject>::as_select(),
+        ))
+        .into_boxed();
 
-    if let Some(search) = params.search {
-        let q = format!("%{search}%");
+    if let Some(search_term) = params.search {
+        if !search_term.is_empty() {
+            let q = diesel::dsl::sql::<TsQuery>("plainto_tsquery('english', ")
+                .bind::<diesel::sql_types::Text, _>(search_term)
+                .sql(")");
 
-        query = query.filter(title.ilike(q.clone()).or(description.ilike(q)));
+            query = query.filter(q.clone().matches(textsearchable_index_col));
+
+            let rank = ts_rank_cd(textsearchable_index_col, q);
+            query = query.then_order_by(rank.desc());
+        }
     }
 
     if let Some(start_due_date) = params.start_due_date {
@@ -113,6 +128,10 @@ async fn get_homework(
     let (homework, subject) = homeworks
         .find(target_id as i32)
         .left_join(subjects::table)
+        .select((
+            models::HOMEWORK_ALL_COLUMNS,
+            Option::<models::Subject>::as_select(),
+        ))
         .first::<(models::Homework, Option<models::Subject>)>(&mut conn)
         .await?;
 

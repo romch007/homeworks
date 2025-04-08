@@ -314,6 +314,7 @@ dependencies = [
  "chrono",
  "diesel_derives",
  "itoa",
+ "pq-sys",
 ]
 
 [[package]]
@@ -342,6 +343,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "diesel_full_text_search"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e28f8f872592a5283c3876a85c230dab8ddcc093c83660b96830c272257d03c9"
+dependencies = [
+ "diesel",
 ]
 
 [[package]]
@@ -558,6 +568,7 @@ dependencies = [
  "chrono",
  "diesel",
  "diesel-async",
+ "diesel_full_text_search",
  "dotenvy",
  "envy",
  "serde",
@@ -1091,6 +1102,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77957b295656769bb8ad2b6a6b09d897d94f05c41b069aede1fcdaa675eaea04"
 dependencies = [
  "zerocopy 0.7.35",
+]
+
+[[package]]
+name = "pq-sys"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41c852911b98f5981956037b2ca976660612e548986c30af075e753107bc3400"
+dependencies = [
+ "libc",
+ "vcpkg",
 ]
 
 [[package]]
@@ -1794,6 +1815,12 @@ name = "valuable"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
+
+[[package]]
+name = "vcpkg"
+version = "0.2.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "version_check"

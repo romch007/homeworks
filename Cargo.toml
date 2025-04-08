@@ -8,6 +8,7 @@ axum = "0.8.1"
 chrono = { version = "0.4.39", features = ["serde"] }
 diesel = { version = "2.2.7", features = ["chrono"] }
 diesel-async = { version = "0.5.2", features = ["postgres", "bb8"] }
+diesel_full_text_search = "2.2.0"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 serde = { version = "1.0.217", features = ["derive"] }

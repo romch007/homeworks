@@ -1,6 +1,9 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::*;
+
     homeworks (id) {
         id -> Int4,
         created_at -> Timestamptz,
@@ -9,11 +12,15 @@ diesel::table! {
         title -> Varchar,
         description -> Varchar,
         done -> Bool,
+        textsearchable_index_col -> Tsvector,
         subject_id -> Nullable<Int4>,
     }
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::*;
+
     subjects (id) {
         id -> Int4,
         created_at -> Timestamptz,

@@ -1,3 +1,4 @@
+use crate::schema::*;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -14,6 +15,28 @@ pub struct Homework {
     pub done: bool,
     pub subject_id: Option<i32>,
 }
+
+type HomeworkAllColumns = (
+    homeworks::id,
+    homeworks::created_at,
+    homeworks::updated_at,
+    homeworks::due_date,
+    homeworks::title,
+    homeworks::description,
+    homeworks::done,
+    homeworks::subject_id,
+);
+
+pub const HOMEWORK_ALL_COLUMNS: HomeworkAllColumns = (
+    homeworks::id,
+    homeworks::created_at,
+    homeworks::updated_at,
+    homeworks::due_date,
+    homeworks::title,
+    homeworks::description,
+    homeworks::done,
+    homeworks::subject_id,
+);
 
 #[derive(Debug, Insertable, Deserialize, utoipa::ToSchema)]
 #[diesel(table_name = crate::schema::homeworks)]
