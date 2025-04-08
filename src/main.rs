@@ -16,6 +16,7 @@ use utoipa_swagger_ui::SwaggerUi;
 #[derive(Debug, Deserialize)]
 struct Config {
     database_url: String,
+    database_use_tls: Option<bool>,
 
     addr: Option<IpAddr>,
     port: Option<u16>,
@@ -43,7 +44,11 @@ async fn main() {
         config.port.unwrap_or(8080),
     );
 
-    let pool = db::create_database(&config.database_url).await;
+    let pool = db::create_database(
+        &config.database_url,
+        config.database_use_tls.unwrap_or(false),
+    )
+    .await;
 
     let state = AppState { pool };
 
