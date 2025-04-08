@@ -31,11 +31,13 @@ RUN cargo build-deps --release
 COPY src ./src
 COPY migrations ./migrations
 RUN cargo build --release
-RUN strip target/release/homeworks
 
 FROM ubuntu:24.04
 
-RUN apt-get update -y && apt-get install -y libpq-dev
+RUN apt-get update && apt-get install -y \
+    ca-certificates libpq5 \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV ADDR=0.0.0.0
 ENV PORT=8080
