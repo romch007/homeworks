@@ -1,14 +1,19 @@
 use std::str::FromStr;
 
 use diesel::ConnectionResult;
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::pooled_connection::bb8;
 use diesel_async::pooled_connection::AsyncDieselConnectionManager;
 use diesel_async::pooled_connection::ManagerConfig;
 use diesel_async::AsyncPgConnection;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use futures_util::future::BoxFuture;
 use futures_util::FutureExt;
+use tokio::task::spawn_blocking;
 
 pub type Pool = bb8::Pool<AsyncPgConnection>;
+
+const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
 pub async fn create_database(database_url: &str, tls: bool) -> Pool {
     let mgr = if tls {
@@ -46,4 +51,27 @@ fn establish_tls_connection(database_url: &str) -> BoxFuture<ConnectionResult<As
         AsyncPgConnection::try_from_client_and_connection(client, conn).await
     };
     fut.boxed()
+}
+
+pub async fn run_migrations(database_url: &str, tls: bool) {
+    tracing::info!("running pending migrations");
+
+    let conn = if tls {
+        establish_tls_connection(database_url)
+            .await
+            .expect("cannot establish connection to postgres")
+    } else {
+        todo!()
+    };
+
+    let mut conn = AsyncConnectionWrapper::<AsyncPgConnection>::from(conn);
+
+    spawn_blocking(move || {
+        conn.run_pending_migrations(MIGRATIONS)
+            .expect("cannot run pending migrations");
+    })
+    .await
+    .unwrap();
+
+    tracing::info!("pending migrations done");
 }
