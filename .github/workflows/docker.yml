@@ -16,8 +16,18 @@ jobs:
           registry: ghcr.io
           username: romch007
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Scaleway Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: rg.fr-par.scw.cloud/romch007-projects
+          username: nologin
+          password: ${{ secrets.SCW_SECRET_KEY }}
+
       - name: Build and push Docker images
         uses: docker/build-push-action@v4.1.1
         with:
           push: true
-          tags: ghcr.io/romch007/homeworks:latest
+          tags: |
+            ghcr.io/romch007/homeworks:latest
+            rg.fr-par.scw.cloud/romch007-projects/homeworks:latest
