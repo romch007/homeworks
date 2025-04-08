@@ -16,7 +16,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
 
-          <v-btn variant="plain" @click="close">Cancel</v-btn>
+          <v-btn variant="plain" @click="show = false">Cancel</v-btn>
 
           <v-btn
             color="primary"
@@ -59,15 +59,11 @@ const nameRules = [
 ];
 
 const title = computed(() =>
-  props.variant === "create" ? "Create a new subject" : "Edit a subject"
+  props.variant === "create" ? "Create a new subject" : "Edit a subject",
 );
 const action = computed(() =>
-  props.variant === "create" ? "Create" : "Update"
+  props.variant === "create" ? "Create" : "Update",
 );
-
-function close() {
-  emit("close");
-}
 
 function submit() {
   emit("submit");

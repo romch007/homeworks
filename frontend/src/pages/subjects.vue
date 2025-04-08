@@ -1,9 +1,16 @@
 <template>
-  <!-- <v-btn class="mb-10" color="primary" block @click="showDialog = true"
-    >New subject</v-btn
-    > -->
-
-  <v-skeleton-loader type="list-item" v-if="data === undefined" />
+  <div
+    v-if="data === undefined"
+    class="d-flex flex-row justify-start flex-wrap ga-4"
+  >
+    <v-skeleton-loader
+      min-width="220"
+      min-height="131"
+      type="card"
+      v-for="i in [...Array(10).keys()]"
+      :key="i"
+    />
+  </div>
 
   <v-empty-state v-else-if="data?.length === 0" title="No subject to display">
     <template v-slot:actions>
@@ -40,7 +47,11 @@
           @click="onEdit(subject)"
         ></v-btn>
 
-        <v-btn icon="mdi-delete" variant="text"></v-btn>
+        <v-btn
+          icon="mdi-delete"
+          variant="text"
+          @click="onRemove(subject)"
+        ></v-btn>
       </v-card-actions>
     </v-card>
 
@@ -62,25 +73,41 @@
     v-model:name="formName"
     v-model:hex-color="formHexColor"
     @submit="dialogSubmit"
-    @close="dialogClose"
   ></subject-dialog>
+
+  <confirmation-dialog
+    :loading="confirmationLoading"
+    :title="confirmationDialogTitle"
+    text="Do you really want to delete this subject? You cannot undo this."
+    actionText="Delete"
+    v-model:show="showConfirmationDialog"
+    @submit="confirmationSubmit"
+  ></confirmation-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import useSWRV from "swrv";
 
 import type { Subject } from "@/api";
-import { createSubject, fetcher, updateSubject } from "@/api";
+import { createSubject, deleteSubject, fetcher, updateSubject } from "@/api";
 import dayjs from "@/dayjs";
 
 const showDialog = ref(false);
+const showConfirmationDialog = ref(false);
 
 const formVariant = ref<"create" | "edit">("create");
 const formLoading = ref<boolean>(false);
 const formCurrentSubjectId = ref<number>(-1);
 const formName = ref("");
 const formHexColor = ref("#FFFFFF");
+
+const subjectToDelete = ref<Subject | null>(null);
+const confirmationLoading = ref<boolean>(false);
+
+const confirmationDialogTitle = computed(
+  () => `Delete '${subjectToDelete.value?.name}'`,
+);
 
 async function dialogSubmit() {
   formLoading.value = true;
@@ -91,7 +118,7 @@ async function dialogSubmit() {
     await updateSubject(
       formCurrentSubjectId.value,
       formName.value,
-      formHexColor.value
+      formHexColor.value,
     );
   }
 
@@ -102,8 +129,18 @@ async function dialogSubmit() {
   showDialog.value = false;
 }
 
-function dialogClose() {
-  showDialog.value = false;
+async function confirmationSubmit() {
+  if (subjectToDelete.value === null) return;
+
+  confirmationLoading.value = true;
+
+  await deleteSubject(subjectToDelete.value.id);
+
+  confirmationLoading.value = false;
+
+  mutate();
+
+  showConfirmationDialog.value = false;
 }
 
 function onCreate() {
@@ -126,6 +163,11 @@ function onEdit(subject: Subject) {
   showDialog.value = true;
 }
 
+function onRemove(subject: Subject) {
+  subjectToDelete.value = subject;
+  showConfirmationDialog.value = true;
+}
+
 function resetDialogFields() {
   formName.value = "";
   formHexColor.value = "#FFFFFF";
@@ -133,6 +175,6 @@ function resetDialogFields() {
 
 const { data, error, isValidating, mutate } = useSWRV<Subject[]>(
   "/api/subjects",
-  fetcher
+  fetcher,
 );
 </script>

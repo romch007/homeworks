@@ -21,7 +21,7 @@ export async function fetcher<Data>(url: string): Promise<Data> {
 
 export async function req<U>(
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
-  url: string
+  url: string,
 ): Promise<U> {
   const resp = await fetch(API_URL + url, {
     method,
@@ -32,10 +32,19 @@ export async function req<U>(
   return data as U;
 }
 
+export async function reqNoResp(
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
+  url: string,
+) {
+  await fetch(API_URL + url, {
+    method,
+  });
+}
+
 export async function reqWithBody<T, U>(
   method: "POST" | "PUT",
   url: string,
-  body: T
+  body: T,
 ): Promise<U> {
   const resp = await fetch(API_URL + url, {
     method,
@@ -50,7 +59,7 @@ export async function reqWithBody<T, U>(
 
 export async function createSubject(
   name: string,
-  hexColor?: string
+  hexColor?: string,
 ): Promise<Subject> {
   return await reqWithBody("POST", "/api/subjects", {
     name,
@@ -61,10 +70,14 @@ export async function createSubject(
 export async function updateSubject(
   subjectId: number,
   name?: string,
-  hexColor?: string
+  hexColor?: string,
 ) {
   return await reqWithBody("PUT", `/api/subjects/${subjectId}`, {
     name,
-    hexColor,
+    hex_color: hexColor,
   });
+}
+
+export async function deleteSubject(subjectId: number) {
+  return await reqNoResp("DELETE", `/api/subjects/${subjectId}`);
 }

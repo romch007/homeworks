@@ -48,6 +48,8 @@ async fn list_subjects(
         query = query.filter(name.ilike(q));
     }
 
+    query = query.order(name.asc());
+
     let mut conn = state.pool.get().await?;
 
     let results = query.load::<models::Subject>(&mut conn).await?;

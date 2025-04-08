@@ -2,11 +2,37 @@
   <v-app>
     <v-app-bar>
       <template v-slot:prepend>
-        <v-app-bar-nav-icon></v-app-bar-nav-icon>
+        <v-app-bar-nav-icon
+          v-if="!$vuetify.display.mobile"
+          @click.stop="drawer = !drawer"
+        ></v-app-bar-nav-icon>
       </template>
 
       <v-app-bar-title>My homeworks</v-app-bar-title>
     </v-app-bar>
+
+    <v-navigation-drawer
+      v-model="drawer"
+      v-if="!$vuetify.display.mobile"
+      temporary
+    >
+      <v-list nav>
+        <v-list-item
+          v-for="item in navigationItems"
+          :prepend-icon="item.icon"
+          :title="item.title"
+          :to="item.to"
+        ></v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
+    <v-bottom-navigation v-if="$vuetify.display.mobile">
+      <v-btn v-for="item in navigationItems" :to="item.to">
+        <v-icon>{{ item.icon }}</v-icon>
+
+        <span>{{ item.title }}</span>
+      </v-btn>
+    </v-bottom-navigation>
 
     <v-main>
       <v-container fluid>
@@ -17,5 +43,12 @@
 </template>
 
 <script lang="ts" setup>
-//
+import { ref } from "vue";
+
+const navigationItems = [
+  { icon: "mdi-notebook", title: "Homeworks", to: "/homeworks" },
+  { icon: "mdi-tag-multiple", title: "Subjects", to: "/subjects" },
+];
+
+const drawer = ref<boolean>(false);
 </script>

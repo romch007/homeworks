@@ -24,6 +24,15 @@ pub fn router() -> OpenApiRouter<AppState> {
 struct ListHomeworksParams {
     /// Search query
     search: Option<String>,
+
+    /// Only return homeworks due after `start_due_date`
+    start_due_date: Option<chrono::DateTime<chrono::Utc>>,
+
+    /// Only return homeworks due before `end_due_date`
+    end_due_date: Option<chrono::DateTime<chrono::Utc>>,
+
+    /// Only return homeworks done or not done
+    done: Option<bool>,
 }
 
 /// Retrieves all the homeworks
@@ -51,6 +60,18 @@ async fn list_homeworks(
         let q = format!("%{search}%");
 
         query = query.filter(title.ilike(q.clone()).or(description.ilike(q)));
+    }
+
+    if let Some(start_due_date) = params.start_due_date {
+        query = query.filter(due_date.ge(start_due_date));
+    }
+
+    if let Some(end_due_date) = params.end_due_date {
+        query = query.filter(due_date.ge(end_due_date));
+    }
+
+    if let Some(filter_done) = params.done {
+        query = query.filter(done.eq(filter_done));
     }
 
     let mut conn = state.pool.get().await?;

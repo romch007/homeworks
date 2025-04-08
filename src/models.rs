@@ -47,7 +47,7 @@ pub struct Subject {
 #[derive(Debug, Insertable, Deserialize, utoipa::ToSchema)]
 #[diesel(table_name = crate::schema::subjects)]
 pub struct NewSubject {
-    pub name: Option<String>,
+    pub name: String,
     pub hex_color: Option<String>,
 }
 

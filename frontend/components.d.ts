@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     ColorIndicator: typeof import('./src/components/ColorIndicator.vue')['default']
     ColorInput: typeof import('./src/components/ColorInput.vue')['default']
+    ConfirmationDialog: typeof import('./src/components/ConfirmationDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SubjectDialog: typeof import('./src/components/SubjectDialog.vue')['default']
