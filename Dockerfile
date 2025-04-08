@@ -33,7 +33,9 @@ COPY migrations ./migrations
 RUN cargo build --release
 RUN strip target/release/homeworks
 
-FROM gcr.io/distroless/cc-debian12
+FROM ubuntu:24.04
+
+RUN apt-get update -y && apt-get install -y libpq-dev
 
 ENV ADDR=0.0.0.0
 ENV PORT=8080
