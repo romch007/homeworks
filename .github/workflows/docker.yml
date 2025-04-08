@@ -9,6 +9,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     name: Build Docker image
+    environment: actions
     steps:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
