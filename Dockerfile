@@ -29,6 +29,7 @@ COPY Cargo.toml Cargo.lock ./
 RUN cargo build-deps --release
 
 COPY src ./src
+COPY migrations ./migrations
 RUN cargo build --release
 RUN strip target/release/homeworks
 
