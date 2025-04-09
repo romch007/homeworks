@@ -12,11 +12,11 @@ COPY frontend ./
 
 RUN pnpm run build
 
-FROM rust:1 AS backend
+FROM rust:1-alpine AS backend
 
-ENV TINI_VERSION=v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static /tini
-RUN chmod +x /tini
+ENV RUSTFLAGS='-C target-feature=-crt-static'
+
+RUN apk update --no-cache && apk add --no-cache musl-dev curl libpq-dev
 
 RUN cargo install cargo-build-deps
 
@@ -32,12 +32,13 @@ COPY src ./src
 COPY migrations ./migrations
 RUN cargo build --release
 
-FROM ubuntu:24.04
+ENV TINI_VERSION=v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static /tini
+RUN chmod +x /tini
 
-RUN apt-get update && apt-get install -y \
-    ca-certificates libpq5 \
-    && update-ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+FROM alpine
+
+RUN apk update --no-cache && apk add --no-cache libpq libgcc
 
 ENV ADDR=0.0.0.0
 ENV PORT=8080

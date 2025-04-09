@@ -15,15 +15,12 @@ pub type Pool = bb8::Pool<AsyncPgConnection>;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
-pub async fn create_database(database_url: &str, tls: bool) -> Pool {
-    let mgr = if tls {
-        let mut config = ManagerConfig::default();
-        config.custom_setup = Box::new(establish_tls_connection);
+pub async fn create_database(database_url: &str) -> Pool {
+    let mut config = ManagerConfig::default();
+    config.custom_setup = Box::new(establish_tls_connection);
 
-        AsyncDieselConnectionManager::<AsyncPgConnection>::new_with_config(database_url, config)
-    } else {
-        AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url)
-    };
+    let mgr =
+        AsyncDieselConnectionManager::<AsyncPgConnection>::new_with_config(database_url, config);
 
     bb8::Pool::builder()
         .test_on_check_out(true)
@@ -32,16 +29,16 @@ pub async fn create_database(database_url: &str, tls: bool) -> Pool {
         .expect("cannot create postgres connection pool")
 }
 
-fn establish_tls_connection(database_url: &str) -> BoxFuture<ConnectionResult<AsyncPgConnection>> {
+pub fn establish_tls_connection(
+    database_url: &str,
+) -> BoxFuture<ConnectionResult<AsyncPgConnection>> {
     use rustls_platform_verifier::ConfigVerifierExt;
 
     let fut = async {
         // We first set up the way we want rustls to work.
         let rustls_config = rustls::ClientConfig::with_platform_verifier();
         let tls_config = tokio_postgres_rustls::MakeRustlsConnect::new(rustls_config);
-        let mut config =
-            tokio_postgres::Config::from_str(database_url).expect("invalid postgres url");
-        config.ssl_mode(tokio_postgres::config::SslMode::Require);
+        let config = tokio_postgres::Config::from_str(database_url).expect("invalid postgres url");
 
         let (client, conn) = config
             .connect(tls_config)
@@ -53,16 +50,12 @@ fn establish_tls_connection(database_url: &str) -> BoxFuture<ConnectionResult<As
     fut.boxed()
 }
 
-pub async fn run_migrations(database_url: &str, tls: bool) {
+pub async fn run_migrations(database_url: &str) {
     tracing::info!("running pending migrations");
 
-    let conn = if tls {
-        establish_tls_connection(database_url)
-            .await
-            .expect("cannot establish connection to postgres")
-    } else {
-        todo!()
-    };
+    let conn = establish_tls_connection(database_url)
+        .await
+        .expect("cannot establish connection to postgres");
 
     let mut conn = AsyncConnectionWrapper::<AsyncPgConnection>::from(conn);
 
