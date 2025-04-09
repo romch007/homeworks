@@ -8,7 +8,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use axum::{http::StatusCode, routing::get_service};
 use serde::Deserialize;
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
@@ -59,7 +59,7 @@ async fn main() {
             get_service(ServeDir::new("./dist/assets")).handle_error(handle_svc_error),
         )
         .fallback_service(
-            get_service(ServeDir::new("./dist/index.html")).handle_error(handle_svc_error),
+            get_service(ServeFile::new("./dist/index.html")).handle_error(handle_svc_error),
         )
         .with_state(state)
         .split_for_parts();
