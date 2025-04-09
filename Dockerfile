@@ -16,7 +16,7 @@ FROM rust:1-alpine AS backend
 
 ENV RUSTFLAGS='-C target-feature=-crt-static'
 
-RUN apk update --no-cache && apk add --no-cache musl-dev curl libpq-dev
+RUN apk update --no-cache && apk add --no-cache musl-dev curl
 
 RUN cargo install cargo-build-deps
 
@@ -38,7 +38,7 @@ RUN chmod +x /tini
 
 FROM alpine
 
-RUN apk update --no-cache && apk add --no-cache libpq libgcc
+RUN apk update --no-cache && apk add --no-cache libgcc
 
 ENV ADDR=0.0.0.0
 ENV PORT=8080
