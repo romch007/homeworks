@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="data === undefined"
+    v-if="homeworks === undefined"
     class="d-flex flex-row justify-start flex-wrap ga-4"
   >
     <v-skeleton-loader
@@ -12,7 +12,10 @@
     />
   </div>
 
-  <v-empty-state v-else-if="data?.length === 0" title="No subject to display">
+  <v-empty-state
+    v-else-if="homeworks?.length === 0"
+    title="No subject to display"
+  >
     <template v-slot:actions>
       <v-btn color="primary" @click="onCreate">Create your first subject</v-btn>
     </template>
@@ -21,7 +24,7 @@
   <div class="d-flex flex-row justify-start flex-wrap ga-4" v-else>
     <v-card
       class="d-flex flex-column"
-      v-for="subject in data"
+      v-for="subject in homeworks"
       width="220"
       height="131"
     >
@@ -176,9 +179,4 @@ function resetDialogFields() {
   formName.value = "";
   formHexColor.value = "#FFFFFF";
 }
-
-const { data, error, isValidating, mutate } = useSWRV<Subject[]>(
-  "/api/subjects",
-  fetcher,
-);
 </script>

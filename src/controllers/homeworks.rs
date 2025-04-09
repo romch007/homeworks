@@ -9,7 +9,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
     errors::{not_found, AppResult},
-    models, AppState,
+    models, utils, AppState,
 };
 
 const TAG: &str = "Homeworks";
@@ -33,6 +33,9 @@ struct ListHomeworksParams {
 
     /// Only return homeworks done or not done
     done: Option<bool>,
+
+    /// Filter by subjects
+    subject_ids: Option<utils::IdSequence>,
 }
 
 /// Retrieves all the homeworks
@@ -87,6 +90,14 @@ async fn list_homeworks(
 
     if let Some(filter_done) = params.done {
         query = query.filter(done.eq(filter_done));
+    }
+
+    if let Some(subject_ids) = params.subject_ids {
+        if !subject_ids.is_empty() {
+            let ids = subject_ids.ids();
+
+            query = query.filter(subject_id.eq_any(ids));
+        }
     }
 
     let mut conn = state.pool.get().await?;

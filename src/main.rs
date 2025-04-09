@@ -3,6 +3,7 @@ mod db;
 mod errors;
 mod models;
 mod schema;
+mod utils;
 
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
