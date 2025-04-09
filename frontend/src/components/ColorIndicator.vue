@@ -1,16 +1,25 @@
 <template>
-  <div class="badge" :style="{ backgroundColor: color }"></div>
+  <div
+    class="badge"
+    :style="{
+      backgroundColor: props.color,
+      width: size + 'px',
+      height: size + 'px',
+    }"
+  ></div>
 </template>
 
 <script setup lang="ts">
-const { color } = defineProps<{ color: string }>();
+import { computed } from "vue";
+
+const props = defineProps<{ color: string; size?: number }>();
+
+const size = computed(() => props.size ?? 20);
 </script>
 
 <style scoped>
 .badge {
   margin: 0 8px;
-  min-width: 20px;
-  min-height: 20px;
   border-radius: 50%;
 }
 </style>

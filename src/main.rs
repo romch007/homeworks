@@ -9,6 +9,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use axum::{http::StatusCode, routing::get_service};
 use serde::Deserialize;
 use tower_http::services::{ServeDir, ServeFile};
+use tracing_subscriber::EnvFilter;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
@@ -34,7 +35,9 @@ struct ApiDoc;
 async fn main() {
     dotenvy::dotenv().ok();
 
-    tracing_subscriber::fmt().init();
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("homeworks=info"));
+    tracing_subscriber::fmt().with_env_filter(filter).init();
 
     let config = envy::from_env::<Config>().expect("cannot deserialize env");
 

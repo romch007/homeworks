@@ -93,6 +93,10 @@ import type { Subject } from "@/api";
 import { createSubject, deleteSubject, fetcher, updateSubject } from "@/api";
 import dayjs from "@/dayjs";
 
+definePage({
+  meta: { title: "Subjects" },
+});
+
 const showDialog = ref(false);
 const showConfirmationDialog = ref(false);
 

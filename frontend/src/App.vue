@@ -8,7 +8,7 @@
         ></v-app-bar-nav-icon>
       </template>
 
-      <v-app-bar-title>My homeworks</v-app-bar-title>
+      <v-app-bar-title>{{ appBarTitle }}</v-app-bar-title>
     </v-app-bar>
 
     <v-navigation-drawer
@@ -58,12 +58,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
 
 const navigationItems = [
+  { icon: "mdi-view-dashboard", title: "Dashboard", to: "/" },
   { icon: "mdi-notebook", title: "Homeworks", to: "/homeworks" },
   { icon: "mdi-tag-multiple", title: "Subjects", to: "/subjects" },
 ];
 
 const drawer = ref<boolean>(false);
+
+const route = useRoute();
+const appBarTitle = computed(() => route.meta.title);
 </script>

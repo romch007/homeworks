@@ -2,7 +2,9 @@ const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 export interface Homework {
   id: number;
-  title: String;
+  title: string;
+  description: string;
+  due_date: string;
   done: boolean;
   subject_id?: number;
   subject?: Subject;

@@ -10,8 +10,10 @@ declare module 'vue' {
     ColorIndicator: typeof import('./src/components/ColorIndicator.vue')['default']
     ColorInput: typeof import('./src/components/ColorInput.vue')['default']
     ConfirmationDialog: typeof import('./src/components/ConfirmationDialog.vue')['default']
+    DueIndicator: typeof import('./src/components/DueIndicator.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SubjectDialog: typeof import('./src/components/SubjectDialog.vue')['default']
+    SubjectIndicator: typeof import('./src/components/SubjectIndicator.vue')['default']
   }
 }
