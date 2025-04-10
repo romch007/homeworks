@@ -18,7 +18,8 @@
     <v-col cols="4">
       <v-autocomplete
         v-model="selectedSubjects"
-        :loading="subjects === undefined"
+        :loading="isSubjectsLoading"
+        :disabled="isSubjectsLoading"
         :items="subjects"
         :item-props="subjectFilterItemProps"
         label="Filter by subjects"
@@ -35,7 +36,7 @@
     </v-col>
   </v-row>
 
-  <v-skeleton-loader v-if="homeworks === undefined" type="card" />
+  <v-skeleton-loader v-if="isHomeworksLoading" type="card" />
 
   <v-empty-state
     v-else-if="homeworks?.length === 0"
@@ -84,7 +85,10 @@ definePage({
   meta: { title: "Homeworks" },
 });
 
-const { data: subjects } = useSWRV<Subject[]>("/api/subjects", fetcher);
+const { data: subjects, isLoading: isSubjectsLoading } = useSWRV<Subject[]>(
+  "/api/subjects",
+  fetcher,
+);
 
 const selectedSubjects = ref<Subject[]>([]);
 
@@ -97,6 +101,7 @@ const completionFilter = ref<"All" | "Unfinished" | "Done">("All");
 
 const {
   data: homeworks,
+  isLoading: isHomeworksLoading,
   error,
   mutate,
 } = useSWRV<Homework[]>(() => {

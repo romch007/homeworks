@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="homeworks === undefined"
+    v-if="isSubjectsLoading"
     class="d-flex flex-row justify-start flex-wrap ga-4"
   >
     <v-skeleton-loader
@@ -13,7 +13,7 @@
   </div>
 
   <v-empty-state
-    v-else-if="homeworks?.length === 0"
+    v-else-if="subjects?.length === 0"
     title="No subject to display"
   >
     <template v-slot:actions>
@@ -24,7 +24,7 @@
   <div class="d-flex flex-row justify-start flex-wrap ga-4" v-else>
     <v-card
       class="d-flex flex-column"
-      v-for="subject in homeworks"
+      v-for="subject in subjects"
       width="220"
       height="131"
     >
@@ -115,6 +115,12 @@ const confirmationLoading = ref<boolean>(false);
 const confirmationDialogTitle = computed(
   () => `Delete '${subjectToDelete.value?.name}'`,
 );
+
+const {
+  data: subjects,
+  isLoading: isSubjectsLoading,
+  mutate,
+} = useSWRV<Subject[]>("/api/subjects", fetcher);
 
 async function dialogSubmit() {
   formLoading.value = true;

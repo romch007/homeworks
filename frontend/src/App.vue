@@ -1,18 +1,29 @@
 <template>
   <v-app>
-    <v-app-bar>
+    <v-app-bar class="px-3">
       <template v-slot:prepend>
         <v-app-bar-nav-icon
           v-if="!$vuetify.display.mobile"
-          @click.stop="drawer = !drawer"
+          @click.stop="showDrawer = !showDrawer"
         ></v-app-bar-nav-icon>
       </template>
 
       <v-app-bar-title>{{ appBarTitle }}</v-app-bar-title>
+
+      <v-spacer></v-spacer>
+
+      <v-btn
+        variant="tonal"
+        color="info"
+        prepend-icon="mdi-plus"
+        @click="showHomeworkDialog = true"
+      >
+        New homework
+      </v-btn>
     </v-app-bar>
 
     <v-navigation-drawer
-      v-model="drawer"
+      v-model="showDrawer"
       v-if="!$vuetify.display.mobile"
       temporary
     >
@@ -25,6 +36,8 @@
         ></v-list-item>
       </v-list>
     </v-navigation-drawer>
+
+    <homework-dialog v-model:show="showHomeworkDialog"></homework-dialog>
 
     <v-bottom-navigation v-if="$vuetify.display.mobile">
       <v-btn v-for="item in navigationItems" :to="item.to">
@@ -67,7 +80,8 @@ const navigationItems = [
   { icon: "mdi-tag-multiple", title: "Subjects", to: "/subjects" },
 ];
 
-const drawer = ref<boolean>(false);
+const showDrawer = ref<boolean>(false);
+const showHomeworkDialog = ref<boolean>(false);
 
 const route = useRoute();
 const appBarTitle = computed(() => route.meta.title);
