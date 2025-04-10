@@ -12,6 +12,7 @@
         v-model="completionFilter"
         label="Filter by homework completion"
         :items="['All', 'Unfinished', 'Done']"
+        prepend-inner-icon="mdi-list-status"
       ></v-select>
     </v-col>
 
@@ -23,6 +24,7 @@
         :items="subjects"
         :item-props="subjectFilterItemProps"
         label="Filter by subjects"
+        prepend-inner-icon="mdi-tag-multiple"
         multiple
         chips
         closable-chips
@@ -31,6 +33,14 @@
           <v-chip v-bind="props" :color="item.raw.hex_color" variant="flat">{{
             item.title
           }}</v-chip>
+        </template>
+
+        <template v-slot:item="{ props, item }">
+          <v-list-item v-bind="props">
+            <template v-slot:prepend>
+              <v-icon icon="mdi-tag" :color="item.raw.hex_color"></v-icon>
+            </template>
+          </v-list-item>
         </template>
       </v-autocomplete>
     </v-col>
@@ -50,63 +60,20 @@
     title="No homework to display"
   ></v-empty-state>
 
-  <v-row dense v-else>
-    <v-col v-for="homework in homeworks" cols="4">
-      <v-card class="cursor-pointer" v-ripple @click="homeworkClick(homework)">
-        <subject-indicator
-          class="px-2 mt-3"
-          v-if="!!homework.subject"
-          :subject="homework.subject"
-        />
-
-        <v-card-title>{{ homework.title }}</v-card-title>
-
-        <v-card-subtitle v-if="!!homework.description">{{
-          homework.description
-        }}</v-card-subtitle>
-
-        <v-card-subtitle class="font-italic" v-else
-          >No description provided</v-card-subtitle
-        >
-
-        <v-spacer></v-spacer>
-
-        <v-card-actions class="px-3">
-          <due-indicator
-            v-if="!!homework.due_date"
-            :dueDate="homework.due_date"
-            :done="homework.done"
-          />
-
-          <v-spacer></v-spacer>
-
-          <v-btn
-            icon="mdi-check"
-            @click.stop="changeHomeworkStatus(homework, true)"
-            v-tooltip="'Mark as done'"
-            v-if="!homework.done"
-          ></v-btn>
-
-          <v-btn
-            icon="mdi-undo"
-            @click.stop="changeHomeworkStatus(homework, false)"
-            v-tooltip="'Mark as not finished'"
-            v-else
-          ></v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-col>
-  </v-row>
+  <div class="d-flex flex-row flex-wrap ga-3" v-else>
+    <homework-card
+      v-for="homework in homeworks"
+      :homework="homework"
+      @mutate="mutate"
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { fetcher, updateHomeworkStatus } from "@/api";
+import { fetcher } from "@/api";
 import type { Homework, Subject } from "@/api";
 import useSWRV from "swrv";
 import { ref } from "vue";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
 
 definePage({
   meta: { title: "Homeworks" },
@@ -148,14 +115,4 @@ const {
   const queryString = params.toString();
   return `/api/homeworks${queryString ? "?" + queryString : ""}`;
 }, fetcher);
-
-function homeworkClick(homework: Homework) {
-  router.push({ path: `/homeworks/${homework.id}` });
-}
-
-async function changeHomeworkStatus(homework: Homework, done: boolean) {
-  await updateHomeworkStatus(homework.id, done);
-
-  mutate();
-}
 </script>

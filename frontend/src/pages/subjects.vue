@@ -48,12 +48,14 @@
           icon="mdi-pencil"
           variant="text"
           @click="onEdit(subject)"
+          v-tooltip="'Edit'"
         ></v-btn>
 
         <v-btn
           icon="mdi-delete"
           variant="text"
           @click="onRemove(subject)"
+          v-tooltip="'Remove'"
         ></v-btn>
       </v-card-actions>
     </v-card>

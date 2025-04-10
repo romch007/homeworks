@@ -12,11 +12,12 @@ import "vuetify/styles";
 import { createVuetify } from "vuetify";
 
 import { VDateInput } from "vuetify/labs/VDateInput";
+import { VCalendar } from "vuetify/labs/VCalendar";
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
   theme: {
     defaultTheme: "dark",
   },
-  components: { VDateInput },
+  components: { VDateInput, VCalendar },
 });

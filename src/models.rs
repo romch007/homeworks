@@ -1,11 +1,11 @@
 use crate::schema::*;
 use diesel::prelude::*;
-use diesel_async::AsyncPgConnection;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Queryable, Identifiable, Selectable, Serialize, utoipa::ToSchema)]
+#[derive(Debug, Queryable, Identifiable, Selectable, Associations, Serialize, utoipa::ToSchema)]
 #[diesel(table_name = crate::schema::homeworks)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
+#[diesel(belongs_to(Subject))]
 pub struct Homework {
     pub id: i32,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -89,4 +89,12 @@ pub struct HomeworkWithSubject {
     pub homework: Homework,
 
     pub subject: Option<Subject>,
+}
+
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+pub struct SubjectWithHomeworks {
+    #[serde(flatten)]
+    pub subject: Subject,
+
+    pub homeworks: Vec<Homework>,
 }

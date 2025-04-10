@@ -1,44 +1,59 @@
 <template>
-  <v-text-field
-    v-model="color"
-    hide-details
-    placeholder="Color"
-    prepend-inner-icon="mdi-palette"
-  >
-    <template v-slot:append-inner>
-      <v-menu
-        v-model="menu"
-        location="top"
-        :close-on-content-click="false"
-        offset="-145 16"
+  <v-menu location="center" transition="scale-transition">
+    <template v-slot:activator="{ props }">
+      <v-sheet
+        class="cursor-pointer d-flex justify-start"
+        height="50"
+        :color="color"
+        border
+        rounded
+        v-bind="props"
       >
-        <template v-slot:activator="{ props }">
-          <div :style="swatchStyle" v-bind="props" />
-        </template>
-        <v-card>
-          <v-card-text class="pa-0">
-            <v-color-picker v-model="color" flat />
-          </v-card-text>
-        </v-card>
-      </v-menu>
+        <v-label class="mx-4 cursor-pointer" :style="{ opacity: 1 }"
+          >Color</v-label
+        >
+      </v-sheet>
     </template>
-  </v-text-field>
+
+    <v-sheet border rounded elevation="10" max-height="150" max-width="320">
+      <v-container fluid>
+        <v-row>
+          <v-col
+            v-for="btnColor in availableColors"
+            cols="3"
+            class="d-flex align-center justify-center"
+          >
+            <v-sheet
+              class="cursor-pointer"
+              :color="btnColor"
+              border
+              rounded
+              width="40"
+              height="40"
+              @click="colorClick(btnColor)"
+            ></v-sheet>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-sheet>
+  </v-menu>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+const availableColors = [
+  "#E57373", // Soft Red
+  "#64B5F6", // Soft Blue
+  "#81C784", // Soft Green
+  "#BA68C8", // Soft Purple
+  "#FFD54F", // Soft Yellow
+  "#FFB74D", // Soft Orange
+  "#4DB6AC", // Teal
+  "#A1887F", // Soft Brown/Neutral
+];
 
 const color = defineModel<string>();
-const menu = ref(false);
 
-const swatchStyle = computed(() => ({
-  backgroundColor: color.value,
-  cursor: "pointer",
-  height: "30px",
-  width: "30px",
-  borderRadius: menu.value ? "50%" : "4px",
-  transition: "border-radius 200ms ease-in-out",
-}));
+function colorClick(btnColor: string) {
+  color.value = btnColor;
+}
 </script>
-
-<style scoped></style>

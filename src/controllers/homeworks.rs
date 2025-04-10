@@ -25,6 +25,9 @@ struct ListHomeworksParams {
     /// Search query
     search: Option<String>,
 
+    /// Sort by
+    sort: Option<String>,
+
     /// Only return homeworks due after `start_due_date`
     start_due_date: Option<chrono::DateTime<chrono::Utc>>,
 
@@ -101,6 +104,12 @@ async fn list_homeworks(
         }
     }
 
+    if let Some(sort) = params.sort {
+        if sort == "due_date" {
+            query = query.order(due_date);
+        }
+    }
+
     let mut conn = state.pool.get().await?;
 
     let results = query
@@ -132,12 +141,12 @@ async fn get_homework(
     State(state): State<AppState>,
     Path(target_id): Path<u32>,
 ) -> AppResult<Json<models::HomeworkWithSubject>> {
-    use crate::schema::homeworks::dsl::*;
+    use crate::schema::homeworks;
     use crate::schema::subjects;
 
     let mut conn = state.pool.get().await?;
 
-    let (homework, subject) = homeworks
+    let (homework, subject) = homeworks::table
         .find(target_id as i32)
         .left_join(subjects::table)
         .select((
@@ -195,12 +204,11 @@ async fn update_homework(
     Json(payload): Json<models::UpdatedHomework>,
 ) -> AppResult<Json<models::Homework>> {
     use crate::schema::homeworks;
-    use crate::schema::homeworks::dsl::*;
 
     let mut conn = state.pool.get().await?;
 
     let updated_homework = diesel::update(homeworks::table)
-        .filter(id.eq(target_id as i32))
+        .filter(homeworks::id.eq(target_id as i32))
         .set(&payload)
         .returning(models::Homework::as_returning())
         .get_result(&mut conn)

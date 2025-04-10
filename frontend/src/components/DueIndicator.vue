@@ -12,12 +12,17 @@ import dayjs from "@/dayjs";
 
 const props = defineProps<{ dueDate: string; done: boolean }>();
 
-const isPasted = computed(
-  () => dayjs(props.dueDate).isBefore(dayjs()) && !props.done,
+const dueDate = computed(() => dayjs(props.dueDate));
+
+const isPasted = computed(() => dueDate.value.isBefore(dayjs()) && !props.done);
+const isClose = computed(
+  () =>
+    dueDate.value.isAfter(dayjs()) &&
+    dueDate.value.diff(dayjs(), "day", true) < 2,
 );
 
 const dueText = computed(() => {
-  return props.done ? "Done" : "Due " + dayjs(props.dueDate).fromNow();
+  return props.done ? "Done" : "Due " + dueDate.value.fromNow();
 });
 
 const dueTextStyle = computed(() => {
@@ -25,6 +30,10 @@ const dueTextStyle = computed(() => {
 
   if (props.done) {
     color = "rgb(var(--v-theme-success)) !important";
+  }
+
+  if (isClose.value) {
+    color = "rgb(var(--v-theme-warning)) !important";
   }
 
   if (isPasted.value) {
@@ -41,6 +50,7 @@ const icon = computed(() => {
 
 const iconColor = computed(() => {
   if (props.done) return "success";
+  if (isClose.value) return "warning";
   return isPasted.value ? "error" : undefined;
 });
 </script>

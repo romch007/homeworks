@@ -75,6 +75,7 @@ import { mutate } from "swrv";
 
 const navigationItems = [
   { icon: "mdi-view-dashboard", title: "Dashboard", to: "/" },
+  { icon: "mdi-calendar-month", title: "Schedulue", to: "/schedule" },
   { icon: "mdi-notebook", title: "Homeworks", to: "/homeworks" },
   { icon: "mdi-tag-multiple", title: "Subjects", to: "/subjects" },
 ];

@@ -59,7 +59,7 @@ const nameRules = [
 ];
 
 const title = computed(() =>
-  props.variant === "create" ? "Create a new subject" : "Edit a subject",
+  props.variant === "create" ? "Create a new subject" : `Edit '${name.value}'`,
 );
 const action = computed(() =>
   props.variant === "create" ? "Create" : "Update",

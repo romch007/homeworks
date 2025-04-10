@@ -11,6 +11,7 @@ declare module 'vue' {
     ColorInput: typeof import('./src/components/ColorInput.vue')['default']
     ConfirmationDialog: typeof import('./src/components/ConfirmationDialog.vue')['default']
     DueIndicator: typeof import('./src/components/DueIndicator.vue')['default']
+    HomeworkCard: typeof import('./src/components/HomeworkCard.vue')['default']
     HomeworkDialog: typeof import('./src/components/HomeworkDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

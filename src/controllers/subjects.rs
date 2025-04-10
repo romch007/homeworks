@@ -3,6 +3,7 @@ use axum::{
     Json,
 };
 use diesel::prelude::*;
+use diesel::BelongingToDsl;
 use diesel_async::RunQueryDsl;
 use serde::Deserialize;
 use utoipa_axum::{router::OpenApiRouter, routes};
@@ -63,7 +64,7 @@ async fn list_subjects(
     path = "/{id}",
     tag = TAG,
     responses(
-        (status = OK, body = models::Subject),
+        (status = OK, body = models::SubjectWithHomeworks),
         (status = NOT_FOUND, description = "The subject does not exist")
     ),
     params(
@@ -73,17 +74,22 @@ async fn list_subjects(
 async fn find_subject(
     State(state): State<AppState>,
     Path(target_id): Path<u32>,
-) -> AppResult<Json<models::Subject>> {
-    use crate::schema::subjects::dsl::*;
+) -> AppResult<Json<models::SubjectWithHomeworks>> {
+    use crate::schema::subjects;
 
     let mut conn = state.pool.get().await?;
 
-    let subject = subjects
+    let subject = subjects::table
         .find(target_id as i32)
         .first::<models::Subject>(&mut conn)
         .await?;
 
-    Ok(Json(subject))
+    let homeworks = models::Homework::belonging_to(&subject)
+        .select(models::HOMEWORK_ALL_COLUMNS)
+        .load::<models::Homework>(&mut conn)
+        .await?;
+
+    Ok(Json(models::SubjectWithHomeworks { subject, homeworks }))
 }
 
 /// Creates a new subject
