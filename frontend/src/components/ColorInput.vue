@@ -1,5 +1,10 @@
 <template>
-  <v-menu location="center" transition="scale-transition">
+  <v-menu
+    transition="scale-transition"
+    location="center"
+    location-strategy="connected"
+    target="cursor"
+  >
     <template v-slot:activator="{ props }">
       <v-sheet
         class="cursor-pointer d-flex justify-start"
