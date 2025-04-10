@@ -16,7 +16,10 @@
         variant="tonal"
         color="info"
         prepend-icon="mdi-plus"
-        @click="showHomeworkDialog = true"
+        @click="
+          resetFields();
+          showHomeworkDialog = true;
+        "
       >
         New homework
       </v-btn>

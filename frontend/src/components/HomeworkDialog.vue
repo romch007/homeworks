@@ -26,7 +26,17 @@
             :disabled="subjects == undefined"
             :items="subjects ?? []"
             :item-props="subjectItemProp"
-          ></v-autocomplete>
+            prepend-inner-icon="mdi-tag"
+            :color="subject?.hex_color"
+          >
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props">
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-tag" :color="item.raw.hex_color"></v-icon>
+                </template>
+              </v-list-item>
+            </template>
+          </v-autocomplete>
         </v-card-text>
 
         <v-card-actions>
