@@ -1,5 +1,6 @@
 use crate::schema::*;
 use diesel::prelude::*;
+use diesel_async::AsyncPgConnection;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Queryable, Identifiable, Selectable, Serialize, utoipa::ToSchema)]
@@ -54,6 +55,7 @@ pub struct UpdatedHomework {
     pub title: Option<String>,
     pub description: Option<String>,
     pub subject_id: Option<i32>,
+    pub done: Option<bool>,
 }
 
 #[derive(Debug, Queryable, Identifiable, Selectable, Serialize, utoipa::ToSchema)]

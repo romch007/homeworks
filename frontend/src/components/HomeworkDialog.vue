@@ -13,13 +13,14 @@
           <v-textarea label="Description" v-model="description"></v-textarea>
 
           <v-date-input
-            v-model="date"
+            v-model="dueDate"
             label="Due date"
             prepend-icon=""
             prepend-inner-icon="$calendar"
           ></v-date-input>
 
           <v-autocomplete
+            v-model="subject"
             label="Subject"
             :loading="subjects === undefined"
             :disabled="subjects == undefined"
@@ -59,7 +60,8 @@ const show = defineModel<boolean>("show");
 
 const title = defineModel<string>("title");
 const description = defineModel<string>("description");
-const date = defineModel<string>("date");
+const dueDate = defineModel<Date>("dueDate");
+const subject = defineModel<Subject>("subject");
 
 const emit = defineEmits<{
   (e: "close"): void;
@@ -80,7 +82,11 @@ function submit() {
   emit("submit");
 }
 
-const { data: subjects, mutate } = useSWRV<Subject[]>("/api/subjects", fetcher);
+const { data: subjects, mutate } = useSWRV<Subject[]>(
+  "/api/subjects",
+  fetcher,
+  { revalidateOnFocus: false },
+);
 
 watch(show, (newValue, _oldValue) => {
   if (newValue) mutate();

@@ -13,6 +13,7 @@ diesel_migrations = "2.2.0"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 futures-util = "0.3.31"
+icalendar = "0.16.13"
 rustls = "0.23.25"
 rustls-platform-verifier = "0.5.1"
 serde = { version = "1.0.217", features = ["derive"] }

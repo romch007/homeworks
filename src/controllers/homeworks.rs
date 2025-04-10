@@ -65,6 +65,7 @@ async fn list_homeworks(
             models::HOMEWORK_ALL_COLUMNS,
             Option::<models::Subject>::as_select(),
         ))
+        .order_by(id)
         .into_boxed();
 
     if let Some(search_term) = params.search {

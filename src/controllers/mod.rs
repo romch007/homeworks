@@ -1,4 +1,5 @@
 mod homeworks;
+mod ical;
 mod subjects;
 
 use axum::extract::State;
@@ -27,5 +28,6 @@ pub fn router() -> OpenApiRouter<AppState> {
     OpenApiRouter::new()
         .nest("/homeworks", homeworks::router())
         .nest("/subjects", subjects::router())
+        .nest("/ical", ical::router())
         .routes(routes!(health))
 }

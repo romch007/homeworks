@@ -37,7 +37,15 @@
       </v-list>
     </v-navigation-drawer>
 
-    <homework-dialog v-model:show="showHomeworkDialog"></homework-dialog>
+    <homework-dialog
+      :loading="homeworkDialogLoading"
+      v-model:show="showHomeworkDialog"
+      v-model:title="homeworkTitle"
+      v-model:description="homeworkDescription"
+      v-model:dueDate="homeworkDueDate"
+      v-model:subject="homeworkSubject"
+      @submit="submitCreateHomework"
+    ></homework-dialog>
 
     <v-bottom-navigation v-if="$vuetify.display.mobile">
       <v-btn v-for="item in navigationItems" :to="item.to">
@@ -49,30 +57,21 @@
 
     <v-main>
       <v-container fluid>
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <v-fade-transition hide-on-leave>
+            <component :is="Component" />
+          </v-fade-transition>
+        </router-view>
       </v-container>
     </v-main>
-
-    <v-footer
-      app
-      v-if="!$vuetify.display.mobile"
-      class="d-flex align-center justify-center ga-2 flex-wrap flex-grow-1 py-3"
-    >
-      © 2025 Romain Chardiny —
-      <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank"
-        >AGPLv3 License</a
-      >
-      —
-      <a href="https://github.com/romch007/homeworks" target="_blank"
-        >View Source</a
-      >
-    </v-footer>
   </v-app>
 </template>
 
 <script lang="ts" setup>
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
+import { createHomework, fetcher, type Subject } from "./api";
+import { mutate } from "swrv";
 
 const navigationItems = [
   { icon: "mdi-view-dashboard", title: "Dashboard", to: "/" },
@@ -83,6 +82,38 @@ const navigationItems = [
 const showDrawer = ref<boolean>(false);
 const showHomeworkDialog = ref<boolean>(false);
 
+const homeworkDialogLoading = ref<boolean>(false);
+
+const homeworkTitle = ref<string>("");
+const homeworkDescription = ref<string>("");
+const homeworkSubject = ref<Subject>();
+const homeworkDueDate = ref<Date>(new Date());
+
 const route = useRoute();
 const appBarTitle = computed(() => route.meta.title);
+
+async function submitCreateHomework() {
+  homeworkDialogLoading.value = true;
+
+  await createHomework(
+    homeworkTitle.value,
+    homeworkDescription.value,
+    homeworkDueDate.value,
+    homeworkSubject.value,
+  );
+
+  mutate("/api/homeworks", fetcher("/api/homeworks"));
+
+  homeworkDialogLoading.value = false;
+  showHomeworkDialog.value = false;
+
+  resetFields();
+}
+
+function resetFields() {
+  homeworkTitle.value = "";
+  homeworkDescription.value = "";
+  homeworkDueDate.value = new Date();
+  homeworkSubject.value = undefined;
+}
 </script>

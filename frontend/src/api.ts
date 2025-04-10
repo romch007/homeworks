@@ -83,3 +83,23 @@ export async function updateSubject(
 export async function deleteSubject(subjectId: number) {
   return await reqNoResp("DELETE", `/api/subjects/${subjectId}`);
 }
+
+export async function createHomework(
+  title: string,
+  description: string,
+  dueDate: Date,
+  subject?: Subject,
+): Promise<Homework> {
+  return await reqWithBody("POST", `/api/homeworks`, {
+    title,
+    description,
+    due_date: dueDate.toISOString(),
+    subject_id: subject?.id,
+  });
+}
+
+export async function updateHomeworkStatus(homeworkId: number, done?: boolean) {
+  return await reqWithBody("PUT", `/api/homeworks/${homeworkId}`, {
+    done,
+  });
+}

@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="isSubjectsLoading"
+    v-if="subjects === undefined"
     class="d-flex flex-row justify-start flex-wrap ga-4"
   >
     <v-skeleton-loader
@@ -116,11 +116,7 @@ const confirmationDialogTitle = computed(
   () => `Delete '${subjectToDelete.value?.name}'`,
 );
 
-const {
-  data: subjects,
-  isLoading: isSubjectsLoading,
-  mutate,
-} = useSWRV<Subject[]>("/api/subjects", fetcher);
+const { data: subjects, mutate } = useSWRV<Subject[]>("/api/subjects", fetcher);
 
 async function dialogSubmit() {
   formLoading.value = true;
