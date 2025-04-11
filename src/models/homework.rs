@@ -1,6 +1,8 @@
-use crate::schema::*;
+use crate::schema::homeworks;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+
+use crate::models::Subject;
 
 #[derive(Debug, Queryable, Identifiable, Selectable, Associations, Serialize, utoipa::ToSchema)]
 #[diesel(table_name = crate::schema::homeworks)]
@@ -56,45 +58,4 @@ pub struct UpdatedHomework {
     pub description: Option<String>,
     pub subject_id: Option<i32>,
     pub done: Option<bool>,
-}
-
-#[derive(Debug, Queryable, Identifiable, Selectable, Serialize, utoipa::ToSchema)]
-#[diesel(table_name = crate::schema::subjects)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct Subject {
-    pub id: i32,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub updated_at: chrono::DateTime<chrono::Utc>,
-    pub name: String,
-    pub hex_color: Option<String>,
-}
-
-#[derive(Debug, Insertable, Deserialize, utoipa::ToSchema)]
-#[diesel(table_name = crate::schema::subjects)]
-pub struct NewSubject {
-    pub name: String,
-    pub hex_color: Option<String>,
-}
-
-#[derive(Debug, AsChangeset, Deserialize, utoipa::ToSchema)]
-#[diesel(table_name = crate::schema::subjects)]
-pub struct UpdatedSubject {
-    pub name: Option<String>,
-    pub hex_color: Option<String>,
-}
-
-#[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct HomeworkWithSubject {
-    #[serde(flatten)]
-    pub homework: Homework,
-
-    pub subject: Option<Subject>,
-}
-
-#[derive(Debug, Serialize, utoipa::ToSchema)]
-pub struct SubjectWithHomeworks {
-    #[serde(flatten)]
-    pub subject: Subject,
-
-    pub homeworks: Vec<Homework>,
 }
