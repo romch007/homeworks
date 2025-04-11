@@ -40,6 +40,8 @@ RUN chmod +x /tini
 
 FROM alpine
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 RUN apk update --no-cache && apk add --no-cache libgcc
 
 ENV ADDR=0.0.0.0
@@ -52,6 +54,8 @@ WORKDIR /app
 COPY --from=frontend /app/dist ./dist/
 COPY --from=backend /app/homeworks/target/release/homeworks ./
 COPY --from=backend /tini /tini
+
+USER appuser
 
 ENTRYPOINT ["/tini" , "--"]
 
