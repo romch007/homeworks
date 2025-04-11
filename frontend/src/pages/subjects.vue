@@ -1,93 +1,97 @@
 <template>
-  <div
-    v-if="subjects === undefined"
-    class="d-flex flex-row justify-start flex-wrap ga-4"
-  >
-    <v-skeleton-loader
-      min-width="220"
-      min-height="131"
-      type="card"
-      v-for="i in [...Array(10).keys()]"
-      :key="i"
-    />
-  </div>
-
-  <v-empty-state
-    v-else-if="subjects?.length === 0"
-    title="No subject to display"
-  >
-    <template v-slot:actions>
-      <v-btn color="primary" @click="onCreate">Create your first subject</v-btn>
-    </template>
-  </v-empty-state>
-
-  <div class="d-flex flex-row justify-start flex-wrap ga-4" v-else>
-    <v-card
-      class="d-flex flex-column"
-      v-for="subject in subjects"
-      width="220"
-      height="131"
+  <div>
+    <div
+      v-if="subjects === undefined"
+      class="d-flex flex-row justify-start flex-wrap ga-4"
     >
-      <v-card-title>{{ subject.name }}</v-card-title>
+      <v-skeleton-loader
+        min-width="220"
+        min-height="131"
+        type="card"
+        v-for="i in [...Array(10).keys()]"
+        :key="i"
+      />
+    </div>
 
-      <v-card-subtitle
-        >Created {{ dayjs(subject.created_at).fromNow() }}</v-card-subtitle
+    <v-empty-state
+      v-else-if="subjects?.length === 0"
+      title="No subject to display"
+    >
+      <template v-slot:actions>
+        <v-btn color="primary" @click="onCreate"
+          >Create your first subject</v-btn
+        >
+      </template>
+    </v-empty-state>
+
+    <div class="d-flex flex-row justify-start flex-wrap ga-4" v-else>
+      <v-card
+        class="d-flex flex-column"
+        v-for="subject in subjects"
+        width="220"
+        height="131"
       >
+        <v-card-title>{{ subject.name }}</v-card-title>
 
-      <v-spacer></v-spacer>
-
-      <v-card-actions>
-        <color-indicator
-          v-if="subject.hex_color !== undefined"
-          :color="subject.hex_color"
-        ></color-indicator>
+        <v-card-subtitle
+          >Created {{ dayjs(subject.created_at).fromNow() }}</v-card-subtitle
+        >
 
         <v-spacer></v-spacer>
 
-        <v-btn
-          icon="mdi-pencil"
-          variant="text"
-          @click="onEdit(subject)"
-          v-tooltip="'Edit'"
-        ></v-btn>
+        <v-card-actions>
+          <color-indicator
+            v-if="subject.hex_color !== undefined"
+            :color="subject.hex_color"
+          ></color-indicator>
 
-        <v-btn
-          icon="mdi-delete"
-          variant="text"
-          @click="onRemove(subject)"
-          v-tooltip="'Remove'"
-        ></v-btn>
-      </v-card-actions>
-    </v-card>
+          <v-spacer></v-spacer>
 
-    <v-btn
-      prepend-icon="mdi-plus"
-      variant="tonal"
-      width="220"
-      height="131"
-      stacked
-      @click="onCreate"
-      >New subject</v-btn
-    >
+          <v-btn
+            icon="mdi-pencil"
+            variant="text"
+            @click="onEdit(subject)"
+            v-tooltip="'Edit'"
+          ></v-btn>
+
+          <v-btn
+            icon="mdi-delete"
+            variant="text"
+            @click="onRemove(subject)"
+            v-tooltip="'Remove'"
+          ></v-btn>
+        </v-card-actions>
+      </v-card>
+
+      <v-btn
+        prepend-icon="mdi-plus"
+        variant="tonal"
+        width="220"
+        height="131"
+        stacked
+        @click="onCreate"
+        >New subject</v-btn
+      >
+    </div>
+
+    <subject-dialog
+      :variant="formVariant"
+      :loading="formLoading"
+      v-model:show="showDialog"
+      v-model:name="formName"
+      v-model:hex-color="formHexColor"
+      @submit="dialogSubmit"
+    ></subject-dialog>
+
+    <confirmation-dialog
+      :loading="confirmationLoading"
+      :title="confirmationDialogTitle"
+      text="Do you really want to delete this subject? You cannot undo this."
+      actionText="Delete"
+      v-model:show="showConfirmationDialog"
+      @submit="confirmationSubmit"
+    ></confirmation-dialog>
   </div>
-
-  <subject-dialog
-    :variant="formVariant"
-    :loading="formLoading"
-    v-model:show="showDialog"
-    v-model:name="formName"
-    v-model:hex-color="formHexColor"
-    @submit="dialogSubmit"
-  ></subject-dialog>
-
-  <confirmation-dialog
-    :loading="confirmationLoading"
-    :title="confirmationDialogTitle"
-    text="Do you really want to delete this subject? You cannot undo this."
-    actionText="Delete"
-    v-model:show="showConfirmationDialog"
-    @submit="confirmationSubmit"
-  ></confirmation-dialog>
 </template>
 
 <script setup lang="ts">
@@ -109,7 +113,7 @@ const formVariant = ref<"create" | "edit">("create");
 const formLoading = ref<boolean>(false);
 const formCurrentSubjectId = ref<number>(-1);
 const formName = ref("");
-const formHexColor = ref("#FFFFFF");
+const formHexColor = ref<string>();
 
 const subjectToDelete = ref<Subject | null>(null);
 const confirmationLoading = ref<boolean>(false);
@@ -181,6 +185,6 @@ function onRemove(subject: Subject) {
 
 function resetDialogFields() {
   formName.value = "";
-  formHexColor.value = "#FFFFFF";
+  formHexColor.value = undefined;
 }
 </script>

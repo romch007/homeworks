@@ -6,18 +6,15 @@
     target="cursor"
   >
     <template v-slot:activator="{ props }">
-      <v-sheet
-        class="cursor-pointer d-flex justify-start"
-        height="50"
-        :color="color"
-        border
-        rounded
+      <v-btn
+        :color="displayColor"
         v-bind="props"
+        block
+        prepend-icon="mdi-palette"
+        size="large"
       >
-        <v-label class="mx-4 cursor-pointer" :style="{ opacity: 1 }"
-          >Color</v-label
-        >
-      </v-sheet>
+        Change color
+      </v-btn>
     </template>
 
     <v-sheet border rounded elevation="10" max-height="150" max-width="320">
@@ -45,6 +42,9 @@
 </template>
 
 <script setup lang="ts">
+import { randomChoice } from "@/utils";
+import { computed } from "vue";
+
 const availableColors = [
   "#E57373", // Soft Red
   "#64B5F6", // Soft Blue
@@ -57,6 +57,10 @@ const availableColors = [
 ];
 
 const color = defineModel<string>();
+
+const displayColor = computed(
+  () => color.value ?? randomChoice(availableColors),
+);
 
 function colorClick(btnColor: string) {
   color.value = btnColor;

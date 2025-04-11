@@ -1,14 +1,16 @@
 <template>
-  <v-skeleton-loader v-if="homeworks === undefined"> </v-skeleton-loader>
+  <div>
+    <v-skeleton-loader v-if="homeworks === undefined"> </v-skeleton-loader>
 
-  <div v-if="homeworks">
-    <v-sheet>
-      <v-calendar
-        v-if="homeworks"
-        view-mode="month"
-        :events="calendarEvents"
-      ></v-calendar>
-    </v-sheet>
+    <div v-if="homeworks">
+      <v-sheet>
+        <v-calendar
+          v-if="homeworks"
+          view-mode="month"
+          :events="calendarEvents"
+        ></v-calendar>
+      </v-sheet>
+    </div>
   </div>
 </template>
 

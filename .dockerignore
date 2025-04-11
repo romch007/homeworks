@@ -1,7 +1,10 @@
-node_modules
+dist
 .git
 .gitignore
 *.md
-dist
 target
 *.db
+.env
+frontend/.env
+frontend/dist
+frontend/node_modules

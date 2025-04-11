@@ -8,6 +8,7 @@
             label="Name"
             required
             :rules="nameRules"
+            class="mb-3"
           ></v-text-field>
 
           <color-input v-model="hexColor"></color-input>
