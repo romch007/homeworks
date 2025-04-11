@@ -1,6 +1,8 @@
 mod homework;
 mod subject;
 
+use serde::Serialize;
+
 pub use self::homework::*;
 pub use self::subject::*;
 
