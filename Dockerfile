@@ -12,11 +12,11 @@ RUN pnpm run build
 
 FROM rust:1 AS backend
 
-RUN cargo install cargo-build-deps
-
 WORKDIR /app
 
-RUN cargo new --bin homeworks
+RUN cargo install cargo-build-deps && \
+    cargo new --bin homeworks
+
 WORKDIR /app/homeworks
 
 COPY Cargo.toml Cargo.lock ./
@@ -24,8 +24,9 @@ RUN cargo build-deps --release
 
 COPY src ./src
 COPY migrations ./migrations
-RUN cargo build --release
-RUN strip target/release/homeworks
+
+RUN cargo build --release && \
+    strip target/release/homeworks
 
 ENV TINI_VERSION=v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static /tini

@@ -21,7 +21,7 @@ where
     let s = <String>::deserialize(deserializer)?;
 
     s.split(',')
-        .map(|i| u32::from_str(i))
+        .map(u32::from_str)
         .collect::<Result<Vec<_>, _>>()
         .map_err(serde::de::Error::custom)
 }
