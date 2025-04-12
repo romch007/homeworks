@@ -14,11 +14,7 @@ RUN ls
 
 RUN pnpm run build
 
-FROM rust:1-alpine AS backend
-
-ENV RUSTFLAGS='-C target-feature=-crt-static'
-
-RUN apk update --no-cache && apk add --no-cache musl-dev curl
+FROM rust:1 AS backend
 
 RUN cargo install cargo-build-deps
 
@@ -33,16 +29,13 @@ RUN cargo build-deps --release
 COPY src ./src
 COPY migrations ./migrations
 RUN cargo build --release
+RUN strip target/release/homeworks
 
 ENV TINI_VERSION=v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static /tini
 RUN chmod +x /tini
 
-FROM alpine
-
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-RUN apk update --no-cache && apk add --no-cache libgcc
+FROM gcr.io/distroless/cc-debian12:nonroot
 
 ENV ADDR=0.0.0.0
 ENV PORT=8080
@@ -54,8 +47,6 @@ WORKDIR /app
 COPY --from=frontend /app/dist ./dist/
 COPY --from=backend /app/homeworks/target/release/homeworks ./
 COPY --from=backend /tini /tini
-
-USER appuser
 
 ENTRYPOINT ["/tini" , "--"]
 
