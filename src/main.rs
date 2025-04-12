@@ -1,3 +1,4 @@
+mod config;
 mod controllers;
 mod db;
 mod errors;
@@ -5,24 +6,17 @@ mod models;
 mod schema;
 mod utils;
 
+pub use config::Config;
+
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use axum::{http::StatusCode, routing::get_service};
 use color_eyre::eyre::Context;
-use serde::Deserialize;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing_subscriber::EnvFilter;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
-
-#[derive(Debug, Deserialize)]
-struct Config {
-    database_url: String,
-
-    addr: Option<IpAddr>,
-    port: Option<u16>,
-}
 
 #[derive(Debug, Clone)]
 struct AppState {
@@ -42,7 +36,7 @@ async fn main() -> color_eyre::Result<()> {
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("homeworks=info"));
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
-    let config = envy::from_env::<Config>().wrap_err("cannot deserialize env")?;
+    let config = Config::from_env()?;
 
     let sockaddr = SocketAddr::new(
         config.addr.unwrap_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
