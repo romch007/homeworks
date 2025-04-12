@@ -1,19 +1,10 @@
-use axum::{
-    extract::{Path, Query, State},
-    http::header,
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, http::header, response::IntoResponse};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
-use icalendar::{Calendar, CalendarDateTime, Component, Event, EventLike, Todo, TodoStatus};
-use serde::Deserialize;
+use icalendar::{Calendar, Component, Event, EventLike};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
-use crate::{
-    errors::{not_found, AppResult},
-    models, utils, AppState,
-};
+use crate::{errors::AppResult, models, AppState};
 
 const TAG: &str = "Homeworks";
 

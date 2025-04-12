@@ -8,6 +8,7 @@ mod utils;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use axum::{http::StatusCode, routing::get_service};
+use color_eyre::eyre::Context;
 use serde::Deserialize;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing_subscriber::EnvFilter;
@@ -33,23 +34,28 @@ struct AppState {
 struct ApiDoc;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> color_eyre::Result<()> {
+    color_eyre::install()?;
     dotenvy::dotenv().ok();
 
     let filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("homeworks=info"));
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
-    let config = envy::from_env::<Config>().expect("cannot deserialize env");
+    let config = envy::from_env::<Config>().wrap_err("cannot deserialize env")?;
 
     let sockaddr = SocketAddr::new(
         config.addr.unwrap_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
         config.port.unwrap_or(8080),
     );
 
-    db::run_migrations(&config.database_url).await;
+    db::run_migrations(&config.database_url)
+        .await
+        .wrap_err("cannot run migrations")?;
 
-    let pool = db::create_database(&config.database_url).await;
+    let pool = db::create_database(&config.database_url)
+        .await
+        .wrap_err("cannot create db pool")?;
 
     let state = AppState { pool };
 
@@ -72,11 +78,13 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(sockaddr)
         .await
-        .expect("cannot bind socket address");
+        .wrap_err("cannot bind socket address")?;
 
     tracing::info!("listening on {sockaddr}");
 
     axum::serve(listener, router)
         .await
-        .expect("cannot serve http");
+        .wrap_err("cannot serve http")?;
+
+    Ok(())
 }

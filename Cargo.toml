@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 axum = "0.8.1"
 chrono = { version = "0.4.39", features = ["serde"] }
+color-eyre = "0.6.3"
 diesel = { version = "2.2.7", features = ["chrono"], default-features = false }
 diesel-async = { version = "0.5.2", features = ["postgres", "bb8", "async-connection-wrapper"] }
 diesel_full_text_search = { version = "2.2.0", default-features = false }

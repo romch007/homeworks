@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use color_eyre::eyre::Context;
 use diesel::ConnectionResult;
 use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
 use diesel_async::pooled_connection::bb8;
@@ -15,18 +16,20 @@ pub type Pool = bb8::Pool<AsyncPgConnection>;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
-pub async fn create_database(database_url: &str) -> Pool {
+pub async fn create_database(database_url: &str) -> color_eyre::Result<Pool> {
     let mut config = ManagerConfig::default();
     config.custom_setup = Box::new(establish_tls_connection);
 
     let mgr =
         AsyncDieselConnectionManager::<AsyncPgConnection>::new_with_config(database_url, config);
 
-    bb8::Pool::builder()
+    let pool = bb8::Pool::builder()
         .test_on_check_out(true)
         .build(mgr)
         .await
-        .expect("cannot create postgres connection pool")
+        .wrap_err("cannot create postgres connection pool")?;
+
+    Ok(pool)
 }
 
 pub fn establish_tls_connection(
@@ -50,12 +53,12 @@ pub fn establish_tls_connection(
     fut.boxed()
 }
 
-pub async fn run_migrations(database_url: &str) {
+pub async fn run_migrations(database_url: &str) -> color_eyre::Result<()> {
     tracing::info!("running pending migrations");
 
     let conn = establish_tls_connection(database_url)
         .await
-        .expect("cannot establish connection to postgres");
+        .wrap_err("cannot establish connection to postgres")?;
 
     let mut conn = AsyncConnectionWrapper::<AsyncPgConnection>::from(conn);
 
@@ -63,8 +66,9 @@ pub async fn run_migrations(database_url: &str) {
         conn.run_pending_migrations(MIGRATIONS)
             .expect("cannot run pending migrations");
     })
-    .await
-    .unwrap();
+    .await?;
 
     tracing::info!("pending migrations done");
+
+    Ok(())
 }
