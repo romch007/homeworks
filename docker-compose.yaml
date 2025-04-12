@@ -12,3 +12,19 @@ services:
       POSTGRES_USER: homeworks
       POSTGRES_PASSWORD: test1234
       POSTGRES_DB: homeworks
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      timeout: 5s
+      start_interval: 0s
+      interval: 1s
+      retries: 5
+
+  homeworks:
+    image: ghcr.io/romch007/homeworks
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: "postgres://homeworks:test1234@database:5432/homeworks"
+    depends_on:
+      database:
+        condition: service_healthy
