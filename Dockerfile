@@ -5,11 +5,9 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
-
 RUN pnpm install
 
 COPY frontend ./
-
 RUN pnpm run build
 
 FROM rust:1 AS backend
@@ -46,7 +44,6 @@ COPY --from=frontend /app/dist ./dist/
 COPY --from=backend /app/homeworks/target/release/homeworks ./
 COPY --from=backend /tini /tini
 
-ENTRYPOINT ["/tini" , "--"]
+ENTRYPOINT ["/tini", "--"]
 
 CMD ["/app/homeworks"]
-
