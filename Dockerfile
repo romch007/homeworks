@@ -10,8 +10,6 @@ RUN pnpm install
 
 COPY frontend ./
 
-RUN ls
-
 RUN pnpm run build
 
 FROM rust:1 AS backend
