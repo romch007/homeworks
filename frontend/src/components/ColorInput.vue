@@ -13,7 +13,7 @@
         prepend-icon="mdi-palette"
         size="large"
       >
-        Change color
+        {{ t("changeColor") }}
       </v-btn>
     </template>
 
@@ -44,6 +44,9 @@
 <script setup lang="ts">
 import { randomChoice } from "@/utils";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const availableColors = [
   "#E57373", // Soft Red

@@ -21,7 +21,7 @@ import { computed } from "vue";
 import dayjs from "@/dayjs";
 
 definePage({
-  meta: { title: "Schedule" },
+  meta: { title: "schedule" },
 });
 
 const {

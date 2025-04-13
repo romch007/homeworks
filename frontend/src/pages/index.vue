@@ -2,6 +2,6 @@
 
 <script lang="ts" setup>
 definePage({
-  meta: { title: "Dashboard" },
+  meta: { title: "dashboard" },
 });
 </script>

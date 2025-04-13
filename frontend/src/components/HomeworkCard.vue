@@ -12,9 +12,9 @@
       homework.description
     }}</v-card-subtitle>
 
-    <v-card-subtitle class="font-italic" v-else
-      >No description provided</v-card-subtitle
-    >
+    <v-card-subtitle class="font-italic" v-else>{{
+      t("noDescriptionProvided")
+    }}</v-card-subtitle>
 
     <v-spacer></v-spacer>
 
@@ -31,7 +31,7 @@
         icon="mdi-check"
         :loading="statusChangeLoading"
         @click.stop="changeHomeworkStatus(homework, true)"
-        v-tooltip="'Mark as done'"
+        v-tooltip="t('markAsDone')"
         v-if="!homework.done"
       ></v-btn>
 
@@ -39,13 +39,13 @@
         icon="mdi-undo"
         :loading="statusChangeLoading"
         @click.stop="changeHomeworkStatus(homework, false)"
-        v-tooltip="'Mark as unfinished'"
+        v-tooltip="t('markAsUnfinished')"
         v-else
       ></v-btn>
 
-      <v-btn icon="mdi-pencil" variant="text" v-tooltip="'Edit'"></v-btn>
+      <v-btn icon="mdi-pencil" variant="text" v-tooltip="t('edit')"></v-btn>
 
-      <v-btn icon="mdi-delete" variant="text" v-tooltip="'Remove'"></v-btn>
+      <v-btn icon="mdi-delete" variant="text" v-tooltip="t('remove')"></v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -53,6 +53,9 @@
 <script setup lang="ts">
 import { updateHomeworkStatus, type Homework } from "@/api";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const { homework } = defineProps<{ homework: Homework }>();
 const emit = defineEmits<{ (e: "mutate"): void }>();

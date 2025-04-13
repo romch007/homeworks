@@ -5,7 +5,7 @@
         <v-card-text>
           <v-text-field
             v-model="name"
-            label="Name"
+            :label="t('name')"
             required
             :rules="nameRules"
             class="mb-3"
@@ -17,7 +17,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
 
-          <v-btn variant="plain" @click="show = false">Cancel</v-btn>
+          <v-btn variant="plain" @click="show = false">{{ t("cancel") }}</v-btn>
 
           <v-btn
             color="primary"
@@ -34,6 +34,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variant: "create" | "edit";
@@ -55,15 +58,17 @@ const nameRules = [
   (v: any) => {
     if (v) return true;
 
-    return "You must enter a name";
+    return t("youMustEnterAName");
   },
 ];
 
 const title = computed(() =>
-  props.variant === "create" ? "Create a new subject" : `Edit '${name.value}'`,
+  props.variant === "create"
+    ? t("createNewSubject")
+    : `${t("edit")} '${name.value}'`,
 );
 const action = computed(() =>
-  props.variant === "create" ? "Create" : "Update",
+  props.variant === "create" ? t("create") : t("update"),
 );
 
 function submit() {

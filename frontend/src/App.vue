@@ -8,7 +8,7 @@
         ></v-app-bar-nav-icon>
       </template>
 
-      <v-app-bar-title>{{ appBarTitle }}</v-app-bar-title>
+      <v-app-bar-title v-if="appBarTitle">{{ t(appBarTitle) }}</v-app-bar-title>
 
       <v-spacer></v-spacer>
 
@@ -21,7 +21,7 @@
           showHomeworkDialog = true;
         "
       >
-        New homework
+        {{ t("newHomework") }}
       </v-btn>
     </v-app-bar>
 
@@ -75,12 +75,15 @@ import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { createHomework, fetcher, type Subject } from "./api";
 import { mutate } from "swrv";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const navigationItems = [
-  { icon: "mdi-view-dashboard", title: "Dashboard", to: "/" },
-  { icon: "mdi-calendar-month", title: "Schedulue", to: "/schedule" },
-  { icon: "mdi-notebook", title: "Homeworks", to: "/homeworks" },
-  { icon: "mdi-tag-multiple", title: "Subjects", to: "/subjects" },
+  { icon: "mdi-view-dashboard", title: t("dashboard"), to: "/" },
+  { icon: "mdi-calendar-month", title: t("schedule"), to: "/schedule" },
+  { icon: "mdi-notebook", title: t("homeworks"), to: "/homeworks" },
+  { icon: "mdi-tag-multiple", title: t("subjects"), to: "/subjects" },
 ];
 
 const showDrawer = ref<boolean>(false);
@@ -94,7 +97,7 @@ const homeworkSubject = ref<Subject>();
 const homeworkDueDate = ref<Date>(new Date());
 
 const route = useRoute();
-const appBarTitle = computed(() => route.meta.title);
+const appBarTitle = computed(() => route.meta.title as string | null);
 
 async function submitCreateHomework() {
   homeworkDialogLoading.value = true;

@@ -4,7 +4,7 @@
       <template v-slot:actions>
         <v-spacer></v-spacer>
 
-        <v-btn variant="plain" @click="show = false"> Cancel </v-btn>
+        <v-btn variant="plain" @click="show = false"> {{ t("cancel") }} </v-btn>
 
         <v-btn
           variant="elevated"
@@ -20,7 +20,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   title: string;

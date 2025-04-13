@@ -1,27 +1,30 @@
 <template>
   <v-dialog v-model="show" max-width="500">
-    <v-card title="Create a new homework">
+    <v-card :title="t('createNewHomework')">
       <v-form v-model="formValid" @submit.prevent="submit">
         <v-card-text>
           <v-text-field
             v-model="title"
-            label="Title"
+            :label="t('title')"
             required
             :rules="titleRules"
           ></v-text-field>
 
-          <v-textarea label="Description" v-model="description"></v-textarea>
+          <v-textarea
+            :label="t('description')"
+            v-model="description"
+          ></v-textarea>
 
           <v-date-input
             v-model="dueDate"
-            label="Due date"
+            :label="t('dueDate')"
             prepend-icon=""
             prepend-inner-icon="$calendar"
           ></v-date-input>
 
           <v-autocomplete
             v-model="subject"
-            label="Subject"
+            :label="t('subject')"
             :loading="subjects === undefined"
             :disabled="subjects == undefined"
             :items="subjects ?? []"
@@ -42,14 +45,14 @@
         <v-card-actions>
           <v-spacer></v-spacer>
 
-          <v-btn variant="plain" @click="show = false">Cancel</v-btn>
+          <v-btn variant="plain" @click="show = false">{{ t("cancel") }}</v-btn>
 
           <v-btn
             color="primary"
             variant="tonal"
             type="submit"
             :loading="props.loading"
-            >Create</v-btn
+            >{{ t("create") }}</v-btn
           >
         </v-card-actions>
       </v-form>
@@ -63,6 +66,9 @@ import type { Subject } from "@/api";
 import useSWRV from "swrv";
 import { watch } from "vue";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{ loading: boolean }>();
 
@@ -84,7 +90,7 @@ const titleRules = [
   (v: any) => {
     if (v) return true;
 
-    return "You must enter a title";
+    return t("youMustEnterATitle");
   },
 ];
 

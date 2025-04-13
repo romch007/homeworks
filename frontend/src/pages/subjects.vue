@@ -13,14 +13,11 @@
       />
     </div>
 
-    <v-empty-state
-      v-else-if="subjects?.length === 0"
-      title="No subject to display"
-    >
+    <v-empty-state v-else-if="subjects?.length === 0" :title="t('noSubject')">
       <template v-slot:actions>
-        <v-btn color="primary" @click="onCreate"
-          >Create your first subject</v-btn
-        >
+        <v-btn color="primary" @click="onCreate">{{
+          t("createYourFirstSubject")
+        }}</v-btn>
       </template>
     </v-empty-state>
 
@@ -34,7 +31,8 @@
         <v-card-title>{{ subject.name }}</v-card-title>
 
         <v-card-subtitle
-          >Created {{ dayjs(subject.created_at).fromNow() }}</v-card-subtitle
+          >{{ t("created") }}
+          {{ dayjs(subject.created_at).fromNow() }}</v-card-subtitle
         >
 
         <v-spacer></v-spacer>
@@ -51,14 +49,14 @@
             icon="mdi-pencil"
             variant="text"
             @click="onEdit(subject)"
-            v-tooltip="'Edit'"
+            v-tooltip="t('edit')"
           ></v-btn>
 
           <v-btn
             icon="mdi-delete"
             variant="text"
             @click="onRemove(subject)"
-            v-tooltip="'Remove'"
+            v-tooltip="t('remove')"
           ></v-btn>
         </v-card-actions>
       </v-card>
@@ -70,7 +68,7 @@
         height="131"
         stacked
         @click="onCreate"
-        >New subject</v-btn
+        >{{ t("newSubject") }}</v-btn
       >
     </div>
 
@@ -86,7 +84,7 @@
     <confirmation-dialog
       :loading="confirmationLoading"
       :title="confirmationDialogTitle"
-      text="Do you really want to delete this subject? You cannot undo this."
+      :text="t('subjectDeleteConfirmation')"
       actionText="Delete"
       v-model:show="showConfirmationDialog"
       @submit="confirmationSubmit"
@@ -101,9 +99,12 @@ import useSWRV from "swrv";
 import type { Subject } from "@/api";
 import { createSubject, deleteSubject, fetcher, updateSubject } from "@/api";
 import dayjs from "@/dayjs";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 definePage({
-  meta: { title: "Subjects" },
+  meta: { title: "subjects" },
 });
 
 const showDialog = ref(false);
@@ -119,7 +120,7 @@ const subjectToDelete = ref<Subject | null>(null);
 const confirmationLoading = ref<boolean>(false);
 
 const confirmationDialogTitle = computed(
-  () => `Delete '${subjectToDelete.value?.name}'`,
+  () => `${t("remove")} '${subjectToDelete.value?.name}'`,
 );
 
 const { data: subjects, mutate } = useSWRV<Subject[]>("/api/subjects", fetcher);

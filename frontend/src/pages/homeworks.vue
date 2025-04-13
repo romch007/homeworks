@@ -2,7 +2,7 @@
   <div>
     <v-text-field
       v-model="searchQuery"
-      placeholder="Search for homework..."
+      :placeholder="t('searchForHomework')"
       variant="outlined"
       prepend-inner-icon="mdi-magnify"
     ></v-text-field>
@@ -11,8 +11,9 @@
       <v-col cols="2">
         <v-select
           v-model="completionFilter"
-          label="Filter by homework completion"
-          :items="['All', 'Unfinished', 'Done']"
+          :label="t('filterByHomeworkCompletion')"
+          :items="['all', 'unfinished', 'done']"
+          :item-props="completionFilterItemProps"
           prepend-inner-icon="mdi-list-status"
         ></v-select>
       </v-col>
@@ -24,7 +25,7 @@
           :disabled="subjects === undefined"
           :items="subjects"
           :item-props="subjectFilterItemProps"
-          label="Filter by subjects"
+          :label="t('filterBySubjects')"
           prepend-inner-icon="mdi-tag-multiple"
           multiple
           chips
@@ -58,7 +59,7 @@
 
     <v-empty-state
       v-else-if="homeworks?.length === 0"
-      title="No homework to display"
+      :title="t('noHomework')"
     ></v-empty-state>
 
     <div class="d-flex flex-row flex-wrap ga-3" v-else>
@@ -76,9 +77,12 @@ import { fetcher } from "@/api";
 import type { Homework, Subject } from "@/api";
 import useSWRV from "swrv";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 definePage({
-  meta: { title: "Homeworks" },
+  meta: { title: "homeworks" },
 });
 
 const { data: subjects } = useSWRV<Subject[]>("/api/subjects", fetcher);
@@ -89,8 +93,12 @@ function subjectFilterItemProps(item: Subject) {
   return { title: item.name };
 }
 
+function completionFilterItemProps(item: string) {
+  return { title: t(item) };
+}
+
 const searchQuery = ref<string>("");
-const completionFilter = ref<"All" | "Unfinished" | "Done">("All");
+const completionFilter = ref<"all" | "unfinished" | "done">("all");
 
 const {
   data: homeworks,
@@ -110,8 +118,8 @@ const {
     );
   }
 
-  if (completionFilter.value !== "All") {
-    params.append("done", completionFilter.value === "Done" ? "true" : "false");
+  if (completionFilter.value !== "all") {
+    params.append("done", completionFilter.value === "done" ? "true" : "false");
   }
 
   const queryString = params.toString();
