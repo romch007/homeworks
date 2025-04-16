@@ -35,5 +35,8 @@
   "dueDate": "Date limite",
   "description": "Description",
   "all": "Tout",
-  "unfinished": "Non terminé"
+  "unfinished": "Non terminé",
+  "settings": "Paramètres",
+  "applicationLanguage": "Langue de l'application",
+  "useBrowserDefaultLanguage": "Langue par défaut du navigateur"
 }

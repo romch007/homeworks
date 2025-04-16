@@ -6,7 +6,7 @@ import fr from "@/locales/fr.json";
 type MessageSchema = typeof en;
 
 export default createI18n<[MessageSchema], "en" | "fr">({
-  locale: navigator.language,
+  locale: localStorage.getItem("languageOverride") ?? navigator.language,
   fallbackLocale: "en",
   messages: { en, fr },
 });

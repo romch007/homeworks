@@ -34,5 +34,9 @@
   "title": "Title",
   "dueDate": "Due date",
   "description": "Description",
-  "all": "All"
+  "all": "All",
+  "settings": "Settings",
+  "unfinished": "Unfinished",
+  "applicationLanguage": "Application language",
+  "useBrowserDefaultLanguage": "Use browser default language"
 }

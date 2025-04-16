@@ -34,7 +34,7 @@
         <v-list-item
           v-for="item in navigationItems"
           :prepend-icon="item.icon"
-          :title="item.title"
+          :title="t(item.title)"
           :to="item.to"
         ></v-list-item>
       </v-list>
@@ -54,7 +54,7 @@
       <v-btn v-for="item in navigationItems" :to="item.to">
         <v-icon>{{ item.icon }}</v-icon>
 
-        <span>{{ item.title }}</span>
+        <span>{{ t(item.title) }}</span>
       </v-btn>
     </v-bottom-navigation>
 
@@ -80,10 +80,11 @@ import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 
 const navigationItems = [
-  { icon: "mdi-view-dashboard", title: t("dashboard"), to: "/" },
-  { icon: "mdi-calendar-month", title: t("schedule"), to: "/schedule" },
-  { icon: "mdi-notebook", title: t("homeworks"), to: "/homeworks" },
-  { icon: "mdi-tag-multiple", title: t("subjects"), to: "/subjects" },
+  { icon: "mdi-view-dashboard", title: "dashboard", to: "/" },
+  { icon: "mdi-calendar-month", title: "schedule", to: "/schedule" },
+  { icon: "mdi-notebook", title: "homeworks", to: "/homeworks" },
+  { icon: "mdi-tag-multiple", title: "subjects", to: "/subjects" },
+  { icon: "mdi-cog", title: "settings", to: "/settings" },
 ];
 
 const showDrawer = ref<boolean>(false);
