@@ -5,12 +5,14 @@ mod errors;
 mod models;
 mod schema;
 mod utils;
+#[cfg(test)]
+mod tests;
 
 pub use config::Config;
 
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
-use axum::{http::StatusCode, routing::get_service};
+use axum::{http::StatusCode, routing::get_service, Router};
 use color_eyre::eyre::Context;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing_subscriber::EnvFilter;
@@ -27,27 +29,8 @@ struct AppState {
 #[openapi()]
 struct ApiDoc;
 
-#[tokio::main]
-async fn main() -> color_eyre::Result<()> {
-    color_eyre::install()?;
-    dotenvy::dotenv().ok();
-
-    let filter =
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("homeworks=info"));
-    tracing_subscriber::fmt().with_env_filter(filter).init();
-
-    let config = Config::from_env()?;
-
-    let sockaddr = SocketAddr::new(
-        config.addr.unwrap_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
-        config.port.unwrap_or(8080),
-    );
-
-    db::run_migrations(&config.database_url)
-        .await
-        .wrap_err("cannot run migrations")?;
-
-    let pool = db::create_database(&config.database_url)
+pub async fn create_router(database_url: &str) -> color_eyre::Result<Router> {
+    let pool = db::create_database(database_url)
         .await
         .wrap_err("cannot create db pool")?;
 
@@ -69,6 +52,31 @@ async fn main() -> color_eyre::Result<()> {
         .split_for_parts();
 
     let router = router.merge(SwaggerUi::new("/swagger-ui").url("/apidoc/openapi.json", api));
+
+    Ok(router)
+}
+
+#[tokio::main]
+async fn main() -> color_eyre::Result<()> {
+    color_eyre::install()?;
+    dotenvy::dotenv().ok();
+
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("homeworks=info"));
+    tracing_subscriber::fmt().with_env_filter(filter).init();
+
+    let config = Config::from_env()?;
+
+    let sockaddr = SocketAddr::new(
+        config.addr.unwrap_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
+        config.port.unwrap_or(8080),
+    );
+
+    db::run_migrations(&config.database_url)
+        .await
+        .wrap_err("cannot run migrations")?;
+
+    let router = create_router(&config.database_url).await?;
 
     let listener = tokio::net::TcpListener::bind(sockaddr)
         .await
