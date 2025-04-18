@@ -5,6 +5,7 @@ dist
 target
 *.db
 .env
+frontend/playwright-report
 frontend/.env
 frontend/dist
 frontend/node_modules

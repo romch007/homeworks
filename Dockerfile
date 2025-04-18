@@ -10,20 +10,25 @@ RUN pnpm install
 COPY frontend ./
 RUN pnpm run build
 
-FROM rust:1 AS backend
-
-WORKDIR /app
-
-RUN cargo install cargo-build-deps && \
-    cargo new --bin homeworks
-
+FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 WORKDIR /app/homeworks
 
-COPY Cargo.toml Cargo.lock ./
-RUN cargo build-deps --release
+FROM chef AS planner
 
-COPY src ./src
-COPY migrations ./migrations
+COPY Cargo.toml Cargo.lock ./
+COPY src src/
+COPY migrations migrations/
+
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef AS backend
+
+COPY --from=planner /app/homeworks/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+
+COPY Cargo.toml Cargo.lock ./
+COPY src src/
+COPY migrations migrations/
 
 RUN cargo build --release && \
     strip target/release/homeworks

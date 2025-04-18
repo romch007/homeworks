@@ -10,7 +10,8 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@mdi/font": "7.4.47",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
+    "@playwright/test": "1.51.1",
     "@tsconfig/node22": "^22.0.1",
     "@types/node": "^22.14.1",
     "@vitejs/plugin-vue": "^5.2.3",
